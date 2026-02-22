@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View, Pressable, ActivityIndicator, Alert, ScrollView } from "react-native";
+import { router } from "expo-router";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE; 
 
@@ -109,6 +110,14 @@ export default function HomeScreen() {
         <Pressable style={styles.reloadButton} onPress={loadTodos}>
           <Text style={styles.reloadText}>Refresh List</Text>
         </Pressable>
+
+        <Pressable
+          style={styles.reloadButton}
+          onPress={() => router.push("/phototest")}
+        >
+          <Text style={styles.reloadText}>Go to PhotoTest</Text>
+        </Pressable>
+        
       </View>
     </View>
   );
