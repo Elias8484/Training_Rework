@@ -1,0 +1,43 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Backend",
+      "type": "shell",
+      "command": "dotnet run",
+      "options": {
+        "cwd": "${workspaceFolder}/Backend"
+      },
+      "presentation": {
+        "group": "start",
+        "panel": "dedicated"
+      },
+      "isBackground": true
+    },
+    {
+      "label": "Run Mobile",
+      "type": "shell",
+      "command": "npx expo start",
+      "options": {
+        "cwd": "${workspaceFolder}/mobile"
+      },
+      "presentation": {
+        "group": "start",
+        "panel": "dedicated"
+      },
+      "isBackground": true
+    },
+    {
+      "label": "Start Project",
+      "dependsOn": ["Run Backend", "Run Mobile"],
+      "dependsOrder": "parallel",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always"
+      }
+    }
+  ]
+}

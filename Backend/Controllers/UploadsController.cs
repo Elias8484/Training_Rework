@@ -54,7 +54,7 @@ public class UploadsController : ControllerBase
         var ext = isJpeg ? ".jpg" : ".png";
         var contentType = isJpeg ? "image/jpeg" : "image/png";
 
-        var objectName = $"uploads/{DateTime.UtcNow:yyyy/MM}/{Guid.NewGuid()}{ext}";
+        var objectName = $"uploads/{Guid.NewGuid()}{ext}";
 
         // Upload to GCS
         await _storage.UploadObjectAsync(
