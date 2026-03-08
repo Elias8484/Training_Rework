@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { View, Text, Pressable, Image, ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -9,19 +9,17 @@ export default function PhotoTestScreen() {
   const [uploading, setUploading] = useState(false);
 
   const pickImage = async () => {
-    // Request permissions
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert("Permission Denied", "We need access to your photos to upload them.");
       return;
     }
 
-    // Launch Picker
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true, // Forces a re-format/crop which handles HEIC conversion
+      allowsEditing: true,
       aspect: [4, 3],
-      quality: 0.7,        // Compress slightly for faster uploads
+      quality: 0.7,
     });
 
     if (!result.canceled) {
@@ -34,8 +32,6 @@ export default function PhotoTestScreen() {
     setUploading(true);
     try {
       const formData = new FormData();
-      
-      // Standardizing the file name and type to bypass HEIC restrictions
       const filename = uri.split('/').pop() || 'upload.jpg';
       const match = /\.(\w+)$/.exec(filename);
       const type = match ? `image/${match[1]}` : `image/jpeg`;

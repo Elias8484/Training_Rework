@@ -1,112 +1,153 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useEffect, useState } from "react";
+import { StyleSheet, Text, View, Pressable, ActivityIndicator, Alert, ScrollView } from "react-native";
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
 
-export default function TabTwoScreen() {
+export default function TodoScreen() {
+  const [todos, setTodos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  async function loadTodos() {
+    try {
+      const res = await fetch(`${API_BASE}/api/todo`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setTodos(await res.json());
+    } catch (err) {
+      console.error("Could not load todos", err);
+    }
+  }
+
+  async function addTodo() {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/todo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ task: "New Task from Mobile", is_complete: false }),
+      });
+      if (!res.ok) throw new Error("Failed to add task");
+      await loadTodos();
+    } catch (err) {
+      Alert.alert("Error", "Could not add todo: " + err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function deleteTodo(id: number) {
+    try {
+      const res = await fetch(`${API_BASE}/api/todo/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await loadTodos();
+    } catch (err) {
+      Alert.alert("Error", "Could not delete task");
+    }
+  }
+
+  useEffect(() => {
+    loadTodos();
+  }, []);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <View style={styles.container}>
+      <Text style={styles.title}>Todo List</Text>
+
+      <ScrollView style={styles.listContainer}>
+        {todos.length === 0 ? (
+          <Text style={styles.emptyText}>No tasks found.</Text>
+        ) : (
+          todos.map((todo) => (
+            <View key={todo.id} style={styles.todoRow}>
+              <Text style={styles.todoItem}>
+                {todo.is_complete ? "✅" : "⭕"} {todo.task}
+              </Text>
+              <Pressable onPress={() => deleteTodo(todo.id)}>
+                <Text style={styles.deleteText}>Delete</Text>
+              </Pressable>
+            </View>
+          ))
+        )}
+      </ScrollView>
+
+      <View style={styles.footer}>
+        <Pressable
+          style={({ pressed }) => [styles.button, { opacity: pressed || loading ? 0.6 : 1 }]}
+          onPress={addTodo}
+          disabled={loading}
+        >
+          {loading ? <ActivityIndicator color="black" /> : <Text style={styles.buttonText}>Add New Task</Text>}
+        </Pressable>
+
+
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    backgroundColor: "white",
+    paddingTop: 60,
+    paddingHorizontal: 20,
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  title: {
+    fontSize: 28,
+    fontWeight: "800",
+    marginBottom: 20,
+    color: "black",
+    textAlign: "center",
+  },
+  listContainer: {
+    flex: 1,
+    width: "100%",
+  },
+  todoItem: {
+    fontSize: 18,
+    padding: 15,
+    color: "black",
+  },
+  emptyText: {
+    textAlign: "center",
+    marginTop: 20,
+    color: "gray",
+  },
+  footer: {
+    paddingVertical: 20,
+    alignItems: "center",
+  },
+  button: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    backgroundColor: "#f0f0f0",
+    width: "100%",
+    alignItems: "center",
+  },
+  buttonText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "black",
+  },
+  reloadButton: {
+    marginTop: 15,
+  },
+  reloadText: {
+    textDecorationLine: "underline",
+    fontSize: 16,
+    color: "black",
+  },
+  todoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+    paddingRight: 15,
+  },
+  deleteText: {
+    color: "red",
+    fontWeight: "600",
   },
 });
