@@ -14,11 +14,7 @@ jobs:
       - name: Publish backend
         run: |
           cd Backend
-          dotnet publish -c Release -r linux-arm64 --self-contained false -o ./out
-
-      - name: Copy files
-        run: |
-          cp -r Backend/out/* /home/eliaspi123/project/Backend/out/
+          dotnet publish -c Release -r linux-arm64 --self-contained false -o /home/eliaspi123/project/Backend/out
 
       - name: Restart backend
         run: |
