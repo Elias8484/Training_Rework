@@ -13,7 +13,13 @@ public class TodoController : ControllerBase
         _supabase = supabase;
     }
 
-    // --- GET ALL TODOS ---
+    // --- GET ALL TODOS12345test ---
+    [HttpGet("test")]
+    public IActionResult Test()
+    {
+        return Ok("deploy works!!!");
+    }
+    
     [HttpGet]
     public async Task<IActionResult> GetTodos()
     {
