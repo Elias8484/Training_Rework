@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, Text, Pressable, Image, ActivityIndicator, Alert, StyleSheet } from 'react-native';
+import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
@@ -74,6 +75,10 @@ export default function PhotoTestScreen() {
       <Pressable style={styles.button} onPress={pickImage} disabled={uploading}>
         {uploading ? <ActivityIndicator color="white" /> : <Text style={styles.buttonText}>Pick & Upload</Text>}
       </Pressable>
+
+      <Pressable style={[styles.button, styles.secondaryButton]} onPress={() => router.push('/all-images')}>
+        <Text style={styles.buttonText}>See All Uploaded Images</Text>
+      </Pressable>
     </View>
   );
 }
@@ -82,6 +87,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
   title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
   image: { width: 300, height: 300, borderRadius: 10, marginBottom: 20 },
-  button: { backgroundColor: '#007AFF', padding: 15, borderRadius: 8, width: '80%', alignItems: 'center' },
+  button: { backgroundColor: '#007AFF', padding: 15, borderRadius: 8, width: '80%', alignItems: 'center', marginTop: 12 },
+  secondaryButton: { backgroundColor: '#555' },
   buttonText: { color: 'white', fontWeight: 'bold', fontSize: 16 }
 });

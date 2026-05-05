@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Backend.Models;
 using Backend.Data;
 
@@ -60,6 +61,16 @@ public class UploadsController : ControllerBase
         await _context.SaveChangesAsync();
 
         return Ok(new { fileName, publicUrl });
+    }
+
+    [HttpGet("images")]
+    public async Task<IActionResult> GetAllImages()
+    {
+        var images = await _context.SaveImages
+            .OrderByDescending(i => i.Id)
+            .Select(i => new { i.Id, i.ImageName, i.PublicUrl })
+            .ToListAsync();
+        return Ok(images);
     }
 
     [HttpGet("images/{fileName}")]
