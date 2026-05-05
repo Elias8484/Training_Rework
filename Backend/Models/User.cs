@@ -1,12 +1,12 @@
-using Supabase.Postgrest.Attributes;
-using Supabase.Postgrest.Models;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Backend.Models;
 
 [Table("users")]
-public class User : BaseModel
+public class User
 {
-    [PrimaryKey("id", false)]
+    [Key]
     public long Id { get; set; }
 
     [Column("full_name")]

@@ -1,6 +1,7 @@
 using Backend.Services;
-using Supabase;
+using Backend.Data;
 using Google.Cloud.Storage.V1;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,8 +22,11 @@ builder.Services.AddCors(options =>
 builder.Services.AddSingleton<CounterState>();
 
 
-var supabaseUrl = builder.Configuration["Supabase:Url"] ?? throw new Exception("Supabase URL is missing!");
-var supabaseKey = builder.Configuration["Supabase:Key"] ?? throw new Exception("Supabase Key is missing!");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+    ?? throw new Exception("Connection string is missing!");
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(connectionString));
 
 var bucket = builder.Configuration["GoogleCloud:BucketName"] ?? throw new Exception("key (bucket name) is missing!");
 var credsPath = builder.Configuration["GoogleCloud:CredentialsPath"] ?? throw new Exception("google cloud gcs file with credentials is missing!");
@@ -36,19 +40,7 @@ var storageClient = new StorageClientBuilder
 builder.Services.AddSingleton(storageClient);
 builder.Services.AddSingleton(bucket);
 
-builder.Services.AddScoped(_ => 
-    new Supabase.Client(supabaseUrl, supabaseKey, new SupabaseOptions
-    {
-        AutoRefreshToken = true,
-        AutoConnectRealtime = true
-    })
-);
-
 var app = builder.Build();
-
-Console.WriteLine($"ENV: {app.Environment.EnvironmentName}");
-Console.WriteLine($"GCS_BUCKET_NAME = '{bucket}'");
-Console.WriteLine($"GCS_Creds= '{credsPath}'");
 
 if (app.Environment.IsDevelopment())
 {

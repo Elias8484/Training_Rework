@@ -1,62 +1,62 @@
 using Microsoft.AspNetCore.Mvc;
 using Backend.Models;
-using Supabase;
+using Backend.Data;
+using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/todo")]
 public class TodoController : ControllerBase
 {
-    private readonly Supabase.Client _supabase;
+    private readonly AppDbContext _context;
 
-    public TodoController(Supabase.Client supabase)
+    public TodoController(AppDbContext context)
     {
-        _supabase = supabase;
+        _context = context;
     }
 
-    // --- GET ALL TODOS12345test ---
     [HttpGet("test")]
     public IActionResult Test()
     {
         return Ok("deploy works!!!");
     }
-    
+
     [HttpGet]
     public async Task<IActionResult> GetTodos()
     {
-        // Fetches all rows from the 'todos' table
-        var result = await _supabase.From<Todo>().Get();
-        return Ok(result.Models);
+        var todos = await _context.Todos.ToListAsync();
+        return Ok(todos);
     }
 
-    // --- CREATE TODO ---
     [HttpPost]
     public async Task<IActionResult> CreateTodo([FromBody] Todo newTodo)
     {
-        try 
+        try
         {
-            var result = await _supabase.From<Todo>().Insert(newTodo);
-            return Ok(result.Models.FirstOrDefault());
+            _context.Todos.Add(newTodo);
+            await _context.SaveChangesAsync();
+            return Ok(newTodo);
         }
         catch (Exception ex)
         {
-            // This will print the REAL error in your C# terminal
-            Console.WriteLine($"Supabase Insert Error: {ex.Message}");
+            Console.WriteLine($"Insert Error: {ex.Message}");
             return BadRequest(ex.Message);
         }
     }
 
-    // --- DELETE TODO ---
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTodo(int id)
     {
-       try
+        try
         {
-            await _supabase.From<Todo>().Where(x => x.Id == id).Delete();
+            var todo = await _context.Todos.FindAsync(id);
+            if (todo == null) return NotFound();
+            _context.Todos.Remove(todo);
+            await _context.SaveChangesAsync();
             return NoContent();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Supabase Delete Error: {ex.Message}");
+            Console.WriteLine($"Delete Error: {ex.Message}");
             return BadRequest(ex.Message);
         }
     }

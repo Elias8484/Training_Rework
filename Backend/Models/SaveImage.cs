@@ -1,12 +1,12 @@
-using Supabase.Postgrest.Attributes;
-using Supabase.Postgrest.Models;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Backend.Models;   
+namespace Backend.Models;
 
 [Table("images")]
-public class SaveImage : BaseModel
+public class SaveImage
 {
-    [PrimaryKey("id", false)]
+    [Key]
     public long Id { get; set; }
 
     [Column("image_name")]

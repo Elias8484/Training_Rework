@@ -1,12 +1,12 @@
-using Supabase.Postgrest.Attributes;
-using Supabase.Postgrest.Models;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Backend.Models;
 
-[Table("todos")] // Matches the SQL table name
-public class Todo : BaseModel
+[Table("todos")]
+public class Todo
 {
-    [PrimaryKey("id", false)] // false means the database generates the ID
+    [Key]
     public int Id { get; set; }
 
     [Column("task")]
