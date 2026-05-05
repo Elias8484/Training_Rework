@@ -1,6 +1,5 @@
 using Backend.Services;
 using Backend.Data;
-using Google.Cloud.Storage.V1;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,18 +26,6 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
-
-var bucket = builder.Configuration["GoogleCloud:BucketName"] ?? throw new Exception("key (bucket name) is missing!");
-var credsPath = builder.Configuration["GoogleCloud:CredentialsPath"] ?? throw new Exception("google cloud gcs file with credentials is missing!");
-
-var storageClient = new StorageClientBuilder
-
-{
-    CredentialsPath = credsPath
-}.Build();
-
-builder.Services.AddSingleton(storageClient);
-builder.Services.AddSingleton(bucket);
 
 var app = builder.Build();
 

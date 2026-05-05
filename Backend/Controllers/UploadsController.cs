@@ -1,4 +1,3 @@
-using Google.Cloud.Storage.V1;
 using Microsoft.AspNetCore.Mvc;
 using Backend.Models;
 using Backend.Data;
@@ -10,18 +9,15 @@ namespace Backend.Controllers;
 public class UploadsController : ControllerBase
 {
     private readonly AppDbContext _context;
-    private readonly StorageClient _storage;
-    private readonly string _bucketName;
+    private readonly string _imageFolder = "/mnt/usb/images";
 
-    public UploadsController(AppDbContext context, StorageClient storageClient, string bucket)
+    public UploadsController(AppDbContext context)
     {
         _context = context;
-        _storage = storageClient;
-        _bucketName = bucket;
     }
 
     [HttpPost("images")]
-    [RequestSizeLimit(15_000_000)] // 15 MB
+    [RequestSizeLimit(15_000_000)]
     public async Task<IActionResult> UploadImage([FromForm] IFormFile file)
     {
         if (file == null || file.Length == 0)
@@ -42,42 +38,41 @@ public class UploadsController : ControllerBase
                       System.Text.Encoding.ASCII.GetString(header).Contains("ftypmif1");
 
         if (isHeic)
-            return BadRequest("File is in HEIC format. Please convert to JPEG on the mobile device before uploading.");
+            return BadRequest("File is in HEIC format. Please convert to JPEG before uploading.");
 
         if (!isJpeg && !isPng)
-            return BadRequest($"Unsupported format. Please upload JPEG or PNG. (Detected Content-Type: {file.ContentType})");
+            return BadRequest($"Unsupported format. Please upload JPEG or PNG.");
 
         var ext = isJpeg ? ".jpg" : ".png";
-        var contentType = isJpeg ? "image/jpeg" : "image/png";
+        var fileName = $"{Guid.NewGuid()}{ext}";
+        var filePath = Path.Combine(_imageFolder, fileName);
 
-        var objectName = $"uploads/{Guid.NewGuid()}{ext}";
+        await using var fileStream = System.IO.File.Create(filePath);
+        await stream.CopyToAsync(fileStream);
 
-        await _storage.UploadObjectAsync(
-            bucket: _bucketName,
-            objectName: objectName,
-            contentType: contentType,
-            source: stream
-        );
-
-        await _storage.UpdateObjectAsync(new Google.Apis.Storage.v1.Data.Object
-        {
-            Bucket = _bucketName,
-            Name = objectName,
-            Acl = new List<Google.Apis.Storage.v1.Data.ObjectAccessControl>
-            {
-                new() { Entity = "allUsers", Role = "READER" }
-            }
-        });
-
-        var publicUrl = $"https://storage.googleapis.com/{_bucketName}/{objectName}";
+        var publicUrl = $"{Request.Scheme}://{Request.Host}/api/uploads/images/{fileName}";
 
         _context.SaveImages.Add(new SaveImage
         {
-            ImageName = objectName,
+            ImageName = fileName,
             PublicUrl = publicUrl,
         });
         await _context.SaveChangesAsync();
 
-        return Ok(new { objectName, publicUrl });
+        return Ok(new { fileName, publicUrl });
+    }
+
+    [HttpGet("images/{fileName}")]
+    public IActionResult GetImage(string fileName)
+    {
+        var filePath = Path.Combine(_imageFolder, fileName);
+
+        if (!System.IO.File.Exists(filePath))
+            return NotFound();
+
+        var ext = Path.GetExtension(fileName).ToLower();
+        var contentType = ext == ".jpg" || ext == ".jpeg" ? "image/jpeg" : "image/png";
+
+        return PhysicalFile(filePath, contentType);
     }
 }
