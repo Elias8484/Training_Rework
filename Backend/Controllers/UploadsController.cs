@@ -51,7 +51,7 @@ public class UploadsController : ControllerBase
         await using var fileStream = System.IO.File.Create(filePath);
         await stream.CopyToAsync(fileStream);
 
-        var publicUrl = $"{Request.Scheme}://{Request.Host}/api/uploads/images/{fileName}";
+        var publicUrl = $"https://{Request.Host}/api/uploads/images/{fileName}";
 
         _context.SaveImages.Add(new SaveImage
         {
