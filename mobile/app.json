@@ -9,7 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.maxnorupadamsen.mobile",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -48,8 +52,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "fe2daa8b-30c4-4107-9349-32e1acec8743"
+        "projectId": "2149317d-7b92-45d5-bbc9-33fe0ddfa574"
       }
-    }
+    },
+    "owner": "darnells"
   }
 }
