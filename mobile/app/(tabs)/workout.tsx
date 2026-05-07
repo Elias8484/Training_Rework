@@ -18,6 +18,8 @@ const PREDEFINED_EXERCISES = [
 ];
 
 export default function WorkoutScreen() {
+  /* For getting the current users id (will be handled from the backend instead
+  when setting up persistent login with Json Web Tokens) */
   const { user } = useAuth();
   // Tilstanden for den aktive træning
   const [activeExercises, setActiveExercises] = useState<Exercise[]>([]);
@@ -34,7 +36,7 @@ export default function WorkoutScreen() {
 
   const createNewExercise = async () => {
     if (!newName.trim()) return;
-
+    // Send post request to backend exercise controller with the data needed for an exercise row
       try {
         const res = await fetch(`${API_BASE}/api/exercises/createNewExercise`, {
           method: "POST",
@@ -43,7 +45,8 @@ export default function WorkoutScreen() {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data);
-
+    /* create object from the returned data, the generated id from the backend
+       can be used later to reference the correct database row*/
     const newEx: Exercise = {
       id: data.id.toString(),
       name: data.name,

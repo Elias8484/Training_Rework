@@ -35,6 +35,7 @@ public class ExerciseController : ControllerBase
     public async Task<IActionResult> CreateExercise([FromBody] Exercise newExercise)
     {
         try
+    // create exercise object from exercise Model with the json body data send from frontend
         {
             var exercise = new Exercise {
                 Name = newExercise.Name,
@@ -42,7 +43,7 @@ public class ExerciseController : ControllerBase
                 MuscleGroup = newExercise.MuscleGroup,
                 CreatedAt = DateTime.UtcNow,
             };
-
+        // and a save the exercise object to the DB exercises table
             _context.Exercises.Add(exercise);
             await _context.SaveChangesAsync();
             return Ok(exercise);
