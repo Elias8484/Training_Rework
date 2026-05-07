@@ -13,7 +13,7 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<User>().Property(u => u.Id).HasColumnName("id");
+        modelBuilder.Entity<User>().Property(u => u.Id).HasColumnName("user_id");
         modelBuilder.Entity<Todo>().Property(t => t.Id).HasColumnName("id");
         modelBuilder.Entity<SaveImage>().Property(s => s.Id).HasColumnName("id");
     }
