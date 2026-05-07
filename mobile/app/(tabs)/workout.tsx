@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { StyleSheet, Text, View, Pressable, TextInput, FlatList, Dimensions, Modal, ScrollView } from "react-native";
+import { StyleSheet, Text, View, Pressable, TextInput, FlatList, Dimensions, Modal, ScrollView, Alert } from "react-native";
+import { useAuth } from "../../context/auth";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
 
@@ -17,6 +18,7 @@ const PREDEFINED_EXERCISES = [
 ];
 
 export default function WorkoutScreen() {
+  const { user } = useAuth();
   // Tilstanden for den aktive træning
   const [activeExercises, setActiveExercises] = useState<Exercise[]>([]);
 
@@ -30,18 +32,32 @@ export default function WorkoutScreen() {
 
   // --- FUNKTIONER ---
 
-  const createNewExercise = () => {
+  const createNewExercise = async () => {
     if (!newName.trim()) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/exercises/createNewExercise`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: newName, muscleGroup: newMuscle || "None", userId: user?.id }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data);
+
     const newEx: Exercise = {
-      id: Date.now().toString(),
-      name: newName,
-      muscleGroup: newMuscle || "Other",
+      id: data.id.toString(),
+      name: data.name,
+      muscleGroup: data.muscleGroup,
       sets: [{ id: Date.now().toString() + "-set", weight: "", reps: "" }],
     };
+
     setActiveExercises([...activeExercises, newEx]);
     setNewName("");
     setNewMuscle("");
     setShowCreateModal(false);
+  } catch (err: any) {
+    Alert.alert("Error", err.message);
+  }
   };
 
   const addExistingExercise = (ex: { name: string; muscleGroup: string }) => {
