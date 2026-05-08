@@ -24,8 +24,10 @@ export default function SignInScreen() {
         body: JSON.stringify({ username, password }),
       });
       const data = await res.json();
+      console.log("Login response:", data);
+      
       if (!res.ok) throw new Error(data);
-      login({ id: data.id, fullName: data.fullName, username: data.username });
+      await login({ id: data.id, fullName: data.fullName, username: data.username }, data.token);
       router.replace("/(tabs)");
     } catch (err: any) {
       Alert.alert("Error", err.message);

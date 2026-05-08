@@ -7,7 +7,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthProvider, useAuth } from '@/context/auth';
 
 function RootNavigator() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const colorScheme = useColorScheme();
 
   return (
@@ -18,7 +18,7 @@ function RootNavigator() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
-      {!user && <Redirect href="/sign-in" />}
+      {!isLoading && !user && <Redirect href="/sign-in" />}
       <StatusBar style="auto" />
     </ThemeProvider>
   );

@@ -20,7 +20,7 @@ const PREDEFINED_EXERCISES = [
 export default function WorkoutScreen() {
   /* For getting the current users id (will be handled from the backend instead
   when setting up persistent login with Json Web Tokens) */
-  const { user } = useAuth();
+  const { token } = useAuth();
   // Tilstanden for den aktive træning
   const [activeExercises, setActiveExercises] = useState<Exercise[]>([]);
 
@@ -40,8 +40,11 @@ export default function WorkoutScreen() {
       try {
         const res = await fetch(`${API_BASE}/api/exercises/createNewExercise`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: newName, muscleGroup: newMuscle || "None", userId: user?.id }),
+          headers: {
+             "Content-Type": "application/json",
+             "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ name: newName, muscleGroup: newMuscle || "None"}),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data);

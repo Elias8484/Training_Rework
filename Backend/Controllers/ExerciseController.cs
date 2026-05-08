@@ -2,7 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using Backend.Models;
 using Backend.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
+[Authorize]
 [ApiController]
 [Route("api/exercises")]
 public class ExerciseController : ControllerBase
@@ -30,16 +33,16 @@ public class ExerciseController : ControllerBase
     }
 
     */
-
     [HttpPost("createNewExercise")]
     public async Task<IActionResult> CreateExercise([FromBody] Exercise newExercise)
     {
-        try
-    // create exercise object from exercise Model with the json body data send from frontend
-        {
+        // create exercise object from exercise Model with the json body data send from frontend
+        try{
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
             var exercise = new Exercise {
                 Name = newExercise.Name,
-                UserId = newExercise.UserId,
+                UserId = userId,
                 MuscleGroup = newExercise.MuscleGroup,
                 CreatedAt = DateTime.UtcNow,
             };
