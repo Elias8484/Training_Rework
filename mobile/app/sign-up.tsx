@@ -37,24 +37,25 @@ export default function SignUpScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Create Account</Text>
-      <TextInput style={styles.input} placeholder="Full Name" placeholderTextColor="#aaaaaa" value={fullName} onChangeText={setFullName} />
-      <TextInput style={styles.input} placeholder="Username" placeholderTextColor="#aaaaaa" value={username} onChangeText={setUsername} autoCapitalize="none" />
-      <TextInput style={styles.input} placeholder="Password" placeholderTextColor="#aaaaaa" value={password} onChangeText={setPassword} secureTextEntry />
+      <TextInput style={styles.input} placeholder="Full Name" placeholderTextColor="#000" value={fullName} onChangeText={setFullName} />
+      <TextInput style={styles.input} placeholder="Username" placeholderTextColor="#000" value={username} onChangeText={setUsername} autoCapitalize="none" />
+      <TextInput style={styles.input} placeholder="Password" placeholderTextColor="#000" value={password} onChangeText={setPassword} secureTextEntry />
       <Pressable style={styles.button} onPress={register} disabled={loading}>
         <Text style={styles.buttonText}>{loading ? "Creating..." : "Sign Up"}</Text>
       </Pressable>
-      <Pressable onPress={() => router.replace("/sign-in")}>
-        <Text style={styles.link}>Already have an account? Sign In</Text>
+      <Pressable style={styles.link} onPress={() => router.replace("/sign-in")}>
+        <Text style={styles.linktext}>Already have an account? Sign in</Text>
       </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 20, },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20, textAlign: "center", color: "white" },
-  input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 12, marginBottom: 12, color: "white" },
-  button: { backgroundColor: "#007AFF", padding: 14, borderRadius: 8, alignItems: "center", marginBottom: 12 },
+  container: { flex: 1, justifyContent: "center", padding: 20 },
+  title: { fontSize: 30, fontWeight: "bold", marginBottom: 20, textAlign: "center", color: "black" },
+  input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 12, padding: 12, marginBottom: 12, color: "black" },
+  button: { backgroundColor: "#000", padding: 14, borderRadius: 12, alignItems: "center", marginBottom: 12 },
   buttonText: { color: "white", fontWeight: "bold", fontSize: 16 },
-  link: { textAlign: "center", color: "#007AFF", textDecorationLine: "underline" },
+  link: { borderRadius: 16, backgroundColor: "#aba2a2", width: "60%", alignSelf: "center", padding: 5, marginTop: 3 },
+  linktext: { fontSize: 12, textAlign: "center", color: "black" },
 });
