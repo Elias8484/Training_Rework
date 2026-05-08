@@ -1,21 +1,18 @@
 name: Deploy to Pi
-
 on:
   push:
     branches: [ main ]
-
 jobs:
   deploy-backend:
     runs-on: self-hosted
-
     steps:
       - uses: actions/checkout@v3
-
+      - name: Clean old publish
+        run: rm -rf /home/eliaspi123/project/Backend/out
       - name: Publish backend
         run: |
           cd Backend
           dotnet publish -c Release -r linux-arm64 --self-contained false -o /home/eliaspi123/project/Backend/out
-
       - name: Restart backend
         run: |
           sudo systemctl restart myapp
