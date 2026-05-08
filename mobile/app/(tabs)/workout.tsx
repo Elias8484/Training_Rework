@@ -86,9 +86,13 @@ export default function WorkoutScreen() {
         },
         body: JSON.stringify({ name: newName, muscleGroup: newMuscle || "None" }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data);
-      const newEx: Exercise = {
+
+       console.log("Status:", res.status);
+       const text = await res.text();
+       console.log("Response:", text);
+       const data = JSON.parse(text);
+       if (!res.ok) throw new Error(data);
+       const newEx: Exercise = {
         id: data.id.toString(),
         name: data.name,
         muscleGroup: data.muscleGroup,

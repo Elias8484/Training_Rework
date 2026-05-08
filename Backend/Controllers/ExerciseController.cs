@@ -12,6 +12,8 @@ public class ExerciseController : ControllerBase
 {
     private readonly AppDbContext _context;
 
+    public record CreateExerciseRequest(string Name, string MuscleGroup);
+
     public ExerciseController(AppDbContext context)
     {
         _context = context;
@@ -34,16 +36,16 @@ public class ExerciseController : ControllerBase
 
     */
     [HttpPost("createNewExercise")]
-    public async Task<IActionResult> CreateExercise([FromBody] Exercise newExercise)
+    public async Task<IActionResult> CreateExercise([FromBody] CreateExerciseRequest req)
     {
         // create exercise object from exercise Model with the json body data send from frontend
         try{
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
             var exercise = new Exercise {
-                Name = newExercise.Name,
+                Name = req.Name,
                 UserId = userId,
-                MuscleGroup = newExercise.MuscleGroup,
+                MuscleGroup = req.MuscleGroup,
                 CreatedAt = DateTime.UtcNow,
             };
         // and a save the exercise object to the DB exercises table
