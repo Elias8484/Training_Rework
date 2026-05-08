@@ -12,6 +12,9 @@ namespace Backend.Controllers;
 [Route("api/uploads")]
 public class UploadsController : ControllerBase
 {
+    public class UploadImageRequest{
+        public IFormFile File { get; set; } = null!;
+    }
     private readonly AppDbContext _context;
     private readonly string _imageFolder = "/mnt/usb/images";
 
@@ -23,8 +26,10 @@ public class UploadsController : ControllerBase
     [HttpPost("images")]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(15_000_000)]
-    public async Task<IActionResult> UploadImage([FromForm] IFormFile file)
+    public async Task<IActionResult> UploadImage([FromForm] UploadImageRequest request)
     {
+         var file = request.File;
+
         if (file == null || file.Length == 0)
             return BadRequest("No file uploaded.");
 
