@@ -57,7 +57,7 @@ public class ExerciseController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
-
+    // deploy test
   /*  [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTodo(int id)
     {
