@@ -21,6 +21,7 @@ public class UploadsController : ControllerBase
     }
 
     [HttpPost("images")]
+    [Consumes("multipart/form-data")]
     [RequestSizeLimit(15_000_000)]
     public async Task<IActionResult> UploadImage([FromForm] IFormFile file)
     {
