@@ -57,3 +57,4 @@ app-example
 # generated native folders
 /ios
 /android
+app.json
