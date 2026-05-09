@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {StyleSheet, Text, View, Pressable, TextInput, FlatList, Dimensions, Modal, ScrollView, Alert, Animated} from "react-native";
 import { useAuth } from "../../context/auth";
 
@@ -7,12 +7,6 @@ const width = Dimensions.get("window").width;
 
 type WorkoutSet = { id: string; weight: string; reps: string };
 type Exercise = { id: string; name: string; muscleGroup: string; sets: WorkoutSet[] };
-
-const PREDEFINED_EXERCISES = [
-  { id: "p1", name: "Bench Press", muscleGroup: "Chest" },
-  { id: "p2", name: "Squat", muscleGroup: "Legs" },
-  { id: "p3", name: "Pull Up", muscleGroup: "Back" },
-];
 
 // Reusable bottom-sheet modal with fade overlay + slide-up sheet
 function BottomSheetModal({
@@ -63,6 +57,9 @@ function BottomSheetModal({
 export default function WorkoutScreen() {
   const { token } = useAuth();
   const [activeExercises, setActiveExercises] = useState<Exercise[]>([]);
+  
+  const [predefinedExercises, setPredefinedExercises] = 
+  useState<{id: string, name: string, muscleGroup: string}[]>([])
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showChooseModal, setShowChooseModal] = useState(false);
@@ -106,6 +103,24 @@ export default function WorkoutScreen() {
       Alert.alert("Error", err.message);
     }
   };
+
+  useEffect(() => {
+    const fetchExercises = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/exercises/getExercises`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          },
+        });
+        const data = await res.json();
+        setPredefinedExercises(data);
+
+      } catch(err){
+        console.error("Failed to fetch exercises", err);
+      }
+    };
+    fetchExercises();
+  }, []);
 
   const addExistingExercise = (ex: { name: string; muscleGroup: string }) => {
     const newEx: Exercise = {
@@ -276,7 +291,7 @@ export default function WorkoutScreen() {
         <Pressable style={styles.centeredOverlay} onPress={() => setShowChooseModal(false)}>
           <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
             <Text style={styles.modalTitle}>Select Exercise</Text>
-            {PREDEFINED_EXERCISES.map((ex) => (
+            {predefinedExercises.map((ex) => (
               <Pressable key={ex.id} style={styles.existingExerciseRow} onPress={() => addExistingExercise(ex)}>
                 <Text style={styles.existingName}>{ex.name}</Text>
                 <Text style={styles.existingMuscle}>{ex.muscleGroup}</Text>

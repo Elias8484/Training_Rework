@@ -19,22 +19,17 @@ public class ExerciseController : ControllerBase
         _context = context;
     }
 
-    /*
-
-    [HttpGet("test")]
-    public IActionResult Test()
+    // Assemble a list with all the exercises from the database save to the logged in user
+    [HttpGet("getExercises")]
+    public async Task<IActionResult> GetExercises()
     {
-        return Ok("deploy works!!!");
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var exercises = await _context.Exercises.Where(e => e.UserId == userId)
+                                                .Select(e => new { e.Id, e.Name, e.MuscleGroup })
+                                                .ToListAsync();
+        return Ok(exercises);
     }
 
-    [HttpGet]
-    public async Task<IActionResult> GetTodos()
-    {
-        var todos = await _context.Todos.ToListAsync();
-        return Ok(todos);
-    }
-
-    */
     [HttpPost("createNewExercise")]
     public async Task<IActionResult> CreateExercise([FromBody] CreateExerciseRequest req)
     {
