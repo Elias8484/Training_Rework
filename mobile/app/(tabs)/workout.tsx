@@ -58,6 +58,7 @@ export default function WorkoutScreen() {
   const { token } = useAuth();
   const [activeExercises, setActiveExercises] = useState<Exercise[]>([]);
   
+  // Array of exercise objects that starts as an empty array on first load, updated with the function
   const [predefinedExercises, setPredefinedExercises] = 
   useState<{id: string, name: string, muscleGroup: string}[]>([])
 
@@ -71,6 +72,28 @@ export default function WorkoutScreen() {
   const [newMuscle, setNewMuscle] = useState("");
 
   // --- FUNCTIONS ---
+
+  /* Fetch all the exercises from the backend that belongs to the current user
+    and store it in predefinedExercises */
+  const fetchExercises = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/exercises/getExercises`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        },
+      });
+      const data = await res.json();
+      setPredefinedExercises(data);
+
+    } catch(err){
+      console.error("Failed to fetch exercises", err);
+    }
+  };
+
+    // Runs fetchexercises when screen first loads
+   useEffect(() => {
+    fetchExercises();
+  }, []);
 
   const createNewExercise = async () => {
     if (!newName.trim()) return;
@@ -99,28 +122,11 @@ export default function WorkoutScreen() {
       setNewName("");
       setNewMuscle("");
       setShowCreateModal(false);
+      await fetchExercises();
     } catch (err: any) {
       Alert.alert("Error", err.message);
     }
   };
-
-  useEffect(() => {
-    const fetchExercises = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/exercises/getExercises`, {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          },
-        });
-        const data = await res.json();
-        setPredefinedExercises(data);
-
-      } catch(err){
-        console.error("Failed to fetch exercises", err);
-      }
-    };
-    fetchExercises();
-  }, []);
 
   const addExistingExercise = (ex: { name: string; muscleGroup: string }) => {
     const newEx: Exercise = {
