@@ -52,7 +52,7 @@ export default function SignInScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 20 },
+  container: { flex: 1, justifyContent: "center", padding: 20, backgroundColor: "white" },
   title: { fontSize: 30, fontWeight: "bold", marginBottom: 20, textAlign: "center", color: "black" },
   input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 12, padding: 12, marginBottom: 12, color: "black", },
   button: { backgroundColor: "#000", padding: 14, borderRadius: 12, alignItems: "center", marginBottom: 12 },
