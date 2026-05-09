@@ -3,8 +3,8 @@ using Backend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using System.Text;
-using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,18 +23,11 @@ builder.Services.AddSwaggerGen(options =>
         In = ParameterLocation.Header,
         Description = "Enter your JWT token here"
     });
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    options.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
     {
         {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
+            new OpenApiSecuritySchemeReference("Bearer"),
+            new List<string>()
         }
     });
 });
