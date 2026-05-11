@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import {StyleSheet, Text, View, Pressable, TextInput, FlatList, Dimensions, Modal, ScrollView, Alert, Animated} from "react-native";
+import {StyleSheet, Text, View, Pressable, TextInput, FlatList, Dimensions, Modal, ScrollView, Alert, Animated, ViewToken } from "react-native";
 import { useAuth } from "../../context/auth";
+import Paginator from "../../components/Paginator";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
 const width = Dimensions.get("window").width;
@@ -70,6 +71,18 @@ export default function WorkoutScreen() {
 
   const [newName, setNewName] = useState("");
   const [newMuscle, setNewMuscle] = useState("");
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const scrollX = useRef(new Animated.Value(0)).current;
+  
+const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+  if (viewableItems && viewableItems.length > 0) {
+    setCurrentIndex(viewableItems[0].index ?? 0);
+  }
+}).current;
+
+  const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
+
 
   // --- FUNCTIONS ---
 
@@ -166,6 +179,19 @@ export default function WorkoutScreen() {
     );
   };
 
+  const removeSet = (exerciseId: string, setId: string) => {
+    setActiveExercises(
+      activeExercises.map((ex) => {
+        if (ex.id === exerciseId) {
+          // Filtrer det sæt fra, som har det id vi vil slette
+          const updatedSets = ex.sets.filter((s) => s.id !== setId);
+          return { ...ex, sets: updatedSets };
+        }
+        return ex;
+      })
+    );
+  };
+
   // --- RENDER ---
 
   const renderExerciseCard = ({ item: exercise }: { item: Exercise }) => (
@@ -210,6 +236,13 @@ export default function WorkoutScreen() {
                 value={set.reps}
                 onChangeText={(val) => updateSet(exercise.id, set.id, "reps", val)}
               />
+              <Pressable 
+                style={styles.removeSetButton} 
+                onPress={() => removeSet(exercise.id, set.id)}
+              >
+                <Text style={styles.removeSetText}>×</Text>
+              </Pressable>
+
             </View>
           ))}
 
@@ -247,10 +280,22 @@ export default function WorkoutScreen() {
           renderItem={renderExerciseCard}
           keyExtractor={(item) => item.id}
           horizontal
-          pagingEnabled
+          snapToInterval={width}
           showsHorizontalScrollIndicator={false}
+          snapToAlignment="center"
+          decelerationRate="normal"
+          bounces={false}
+          disableIntervalMomentum={true}
+          onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], { useNativeDriver: false })}
+          scrollEventThrottle={8}
+          onViewableItemsChanged={viewableItemsChanged}
+          viewabilityConfig={viewConfig}
           style={styles.swipeList}
         />
+      )}
+      
+      {activeExercises.length > 0 && (
+        <Paginator data={activeExercises} scrollX={scrollX} />
       )}
 
       {activeExercises.length > 0 && (
@@ -296,7 +341,14 @@ export default function WorkoutScreen() {
       >
         <Pressable style={styles.centeredOverlay} onPress={() => setShowChooseModal(false)}>
           <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-            <Text style={styles.modalTitle}>Select Exercise</Text>
+            <View style={styles.modalTitleRow}>
+              <Pressable style={styles.modalTitleButton} onPress={() => console.log("Select clicked")}>
+                <Text style={styles.modalTitle}>Select Exercise</Text>
+              </Pressable>
+              <Pressable style={styles.modalTitleButton} onPress={() => console.log("Discover clicked")}>
+                <Text style={styles.modalTitle}>Discover</Text>
+              </Pressable>
+            </View>
             {predefinedExercises.map((ex) => (
               <Pressable key={ex.id} style={styles.existingExerciseRow} onPress={() => addExistingExercise(ex)}>
                 <Text style={styles.existingName}>{ex.name}</Text>
@@ -341,7 +393,7 @@ const styles = StyleSheet.create({
   createIconButton: { flex: 1, backgroundColor: "#4CAF50", padding: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   createIconText: { color: "white", fontWeight: "bold", fontSize: 24, lineHeight: 24 },
 
-  fixedFooter: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 20, backgroundColor: "#f8f9fa" },
+  fixedFooter: { paddingHorizontal: 20, paddingBottom: 20, backgroundColor: "#f8f9fa" },
   saveWorkoutButton: { backgroundColor: "#000", paddingVertical: 18, borderRadius: 16, alignItems: "center", shadowColor: "#000", shadowOpacity: 1, shadowRadius: 8, elevation: 3 },
   saveWorkoutText: { color: "white", fontSize: 20, fontWeight: "bold" },
 
@@ -363,9 +415,10 @@ const styles = StyleSheet.create({
   setHeader: { flexDirection: "row", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#f0f0f0", marginBottom: 10 },
   headerText: { flex: 1, fontWeight: "700", color: "#888", textAlign: "left", fontSize: 12, textTransform: "uppercase" },
   setRow: { flexDirection: "row", alignItems: "center", marginBottom: 8, paddingVertical: 4 },
-  setIndex: { flex: 1, textAlign: "left", fontSize: 16, fontWeight: "600", color: "#333" },
+  setIndex: { flex: 0.5, textAlign: "left", fontSize: 16, fontWeight: "600", color: "#333" },
   numberInput: { flex: 1, backgroundColor: "#f0f0f0", borderRadius: 8, padding: 12, marginHorizontal: 5, textAlign: "center", fontSize: 16, fontWeight: "500" },
-
+  removeSetButton: { flex: 0.5, alignItems: "center", justifyContent: "flex-end",},
+  removeSetText: { color: "lightgrey", fontSize: 20, fontWeight: "400" },
   addSetButton: { marginTop: 15, paddingVertical: 10, backgroundColor: "#f0f8ff", borderRadius: 8 },
   addSetText: { color: "#007AFF", fontWeight: "600", textAlign: "center", fontSize: 16 },
 
@@ -376,8 +429,10 @@ const styles = StyleSheet.create({
   bottomSheet: { backgroundColor: "white", padding: 25, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 40 },
 
   // Centered modal (Create exercise)
-  modalContent: { backgroundColor: "white", padding: 25, minHeight: 300, borderRadius: 16, marginHorizontal: 20, marginBottom: "auto", marginTop: "auto" },
-  modalTitle: { fontSize: 22, fontWeight: "bold", marginBottom: 20 },
+  modalContent: { backgroundColor: "white", padding: 20, minHeight: 300, borderRadius: 16, marginHorizontal: 2, marginBottom: "auto", marginTop: "auto" },
+  modalTitle: { fontSize: 16, fontWeight: "bold" },
+  modalTitleRow: { flexDirection: "row", gap: 10, marginBottom: 20 },
+  modalTitleButton: { flex: 1, backgroundColor: "#f0f0f0", paddingVertical: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   input: { borderWidth: 1, borderColor: "#ddd", borderRadius: 10, padding: 15, marginBottom: 15, fontSize: 16 },
   modalActions: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10 },
   cancelText: { color: "black", fontSize: 16, fontWeight: "600" },
@@ -387,7 +442,7 @@ const styles = StyleSheet.create({
   existingExerciseRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: "#eee" },
   existingName: { fontSize: 18, fontWeight: "500" },
   existingMuscle: { color: "#888" },
-  closeModalButton: { marginTop: 10, paddingVertical: 10, alignItems: "center" },
+  closeModalButton: { marginTop: 5, paddingTop: 10, alignItems: "center" },
   
   centeredOverlay: {flex: 1,backgroundColor: "rgba(0, 0, 0, 0.6)",justifyContent: "center",paddingHorizontal: 20,},
 
