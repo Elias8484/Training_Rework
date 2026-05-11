@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.maxnorupadamsen.mobile",
+      "bundleIdentifier": "com.darnells.mobile",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
