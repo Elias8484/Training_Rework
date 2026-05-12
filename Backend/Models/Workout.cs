@@ -29,5 +29,8 @@ public class Workout
     [Column("total_kg")]
     public double TotalKg { get; set; }
 
+    [Column("total_reps")]
+    public double TotalReps { get; set; }
+
 
 }

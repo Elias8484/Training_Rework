@@ -67,6 +67,7 @@ public class ExerciseController : ControllerBase
         
         int workoutTotalExercises = 0;
         int workoutTotalSets = 0;
+        int workoutTotalReps = 0;
         double workoutTotalKg = 0;
 
 
@@ -101,12 +102,14 @@ public class ExerciseController : ControllerBase
                        Reps = set.reps 
                     };
 
-                    workoutTotalKg += set.Kg;
+                    workoutTotalKg += set.Kg * set.reps;
+                    workoutTotalReps += set.reps;
                     workoutTotalSets++;
                     _context.Sets.Add(createdSet);
                 }
             }
 
+            workout.TotalReps = workoutTotalReps;
             workout.TotalExercises = workoutTotalExercises;
             workout.TotalSets = workoutTotalSets;
             workout.TotalKg = workoutTotalKg;
