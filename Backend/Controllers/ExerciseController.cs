@@ -15,7 +15,7 @@ public class ExerciseController : ControllerBase
     public record CreateExerciseRequest(string Name, string MuscleGroup);
 
     // Nested saveworkout request with the 3 records below
-    public record SetRequest(double Kg, int reps);
+    public record SetRequest(double Kg, int Reps);
     public record ExerciseRequest(long ExerciseId, List<SetRequest> Sets);
     public record SaveWorkoutRequest(string Name, List<ExerciseRequest> Exercises);
 
@@ -96,14 +96,17 @@ public class ExerciseController : ControllerBase
                 await _context.SaveChangesAsync();
 
                 foreach(var set in exercise.Sets) {
+
+                    if (set.Kg == 0 || set.Reps == 0) continue;
+
                     var createdSet = new Set {
                        WorkoutEntryId = workoutEntry.Id,
                        Kg = set.Kg,
-                       Reps = set.reps 
+                       Reps = set.Reps 
                     };
 
-                    workoutTotalKg += set.Kg * set.reps;
-                    workoutTotalReps += set.reps;
+                    workoutTotalKg += set.Kg * set.Reps;
+                    workoutTotalReps += set.Reps;
                     workoutTotalSets++;
                     _context.Sets.Add(createdSet);
                 }
