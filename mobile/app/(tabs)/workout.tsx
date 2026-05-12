@@ -122,7 +122,8 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
           }))
         }),
       });
-      const data = await res.json();
+      const text = await res.text();
+      console.log("Response", text);
     } catch(err) {
       console.error("Failed to save workout", err);
     }
@@ -166,9 +167,9 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
     }
   };
 
-  const addExistingExercise = (ex: { name: string; muscleGroup: string }) => {
+  const addExistingExercise = (ex: { id: string; name: string; muscleGroup: string }) => {
     const newEx: Exercise = {
-      id: Date.now().toString(),
+      id: ex.id,
       name: ex.name,
       muscleGroup: ex.muscleGroup,
       sets: [{ id: Date.now().toString() + "-set", weight: "", reps: "" }],

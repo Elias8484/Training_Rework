@@ -15,8 +15,8 @@ public class ExerciseController : ControllerBase
     public record CreateExerciseRequest(string Name, string MuscleGroup);
 
     // Nested saveworkout request with the 3 records below
-    public record SetRequest(decimal Kg, int reps);
-    public record ExerciseRequest(string ExerciseId, List<SetRequest> Sets);
+    public record SetRequest(double Kg, int reps);
+    public record ExerciseRequest(long ExerciseId, List<SetRequest> Sets);
     public record SaveWorkoutRequest(string Name, List<ExerciseRequest> Exercises);
 
     public ExerciseController(AppDbContext context)
@@ -63,8 +63,44 @@ public class ExerciseController : ControllerBase
     [HttpPost("saveWorkout")]
     public async Task<IActionResult> SaveWorkout([FromBody] SaveWorkoutRequest req)
     {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
         try{
-             return Ok("saveworkout sucess" + req.Exercises[0].ExerciseId);
+            var workout = new Workout {
+                UserId = userId,
+                Name = "placeholder",
+                CreatedAt = DateTime.UtcNow,
+                TotalExercises = 0,
+                TotalSets = 0,
+                TotalKg = 0.0
+            };
+
+            _context.Workouts.Add(workout);
+            await _context.SaveChangesAsync();
+
+            foreach (var exercise in req.Exercises){
+                var workoutEntry = new WorkoutEntry {
+                    WorkoutId = workout.Id,
+                    ExerciseId = exercise.ExerciseId,
+                };
+
+                _context.WorkoutEntries.Add(workoutEntry);
+                await _context.SaveChangesAsync();
+
+                foreach(var set in exercise.Sets) {
+                    var createdSet = new Set {
+                       WorkoutEntryId = workoutEntry.Id,
+                       Kg = set.Kg,
+                       Reps = set.reps 
+                    };
+
+                    _context.Sets.Add(createdSet);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok("saveworkout sucess");
         }
 
         catch (Exception ex)
