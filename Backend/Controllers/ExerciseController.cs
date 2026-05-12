@@ -29,7 +29,7 @@ public class ExerciseController : ControllerBase
     public async Task<IActionResult> GetExercises()
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var exercises = await _context.Exercises.Where(e => e.UserId == userId)
+        var exercises = await _context.Exercises.Where(e => e.UserId == userId && !e.IsDeleted)
                                                 .Select(e => new { e.Id, e.Name, e.MuscleGroup })
                                                 .ToListAsync();
         return Ok(exercises);
@@ -143,7 +143,7 @@ public class ExerciseController : ControllerBase
 
             if (exercise == null) return NotFound();
 
-            _context.Exercises.Remove(exercise);
+            exercise.IsDeleted = true;
 
             await _context.SaveChangesAsync();
 

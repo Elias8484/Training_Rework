@@ -22,4 +22,7 @@ public class Exercise
 
     [Column("created_at")]
     public DateTime? CreatedAt { get; set; }
+
+    [Column("is_deleted")]
+    public bool IsDeleted { get; set; } = false;
 }
