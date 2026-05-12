@@ -80,7 +80,7 @@ public class ExerciseController : ControllerBase
                 TotalSets = 0,
                 TotalKg = 0.0
             };
-
+            // Save workout instantly to DB so it gets an id that is needed for workoutEntry
             _context.Workouts.Add(workout);
             await _context.SaveChangesAsync();
 
@@ -89,6 +89,9 @@ public class ExerciseController : ControllerBase
                     WorkoutId = workout.Id,
                     ExerciseId = exercise.ExerciseId,
                 };
+                 // Skip exercise if it does not contain any sets where kg or reps have an entered amount
+                 var validSets = exercise.Sets.Where(s => s.Kg != 0 || s.Reps != 0).ToList();
+                 if (validSets.Count == 0) continue;
 
                 workoutTotalExercises++;
 
@@ -96,7 +99,7 @@ public class ExerciseController : ControllerBase
                 await _context.SaveChangesAsync();
 
                 foreach(var set in exercise.Sets) {
-
+                    // skip if empty set
                     if (set.Kg == 0 || set.Reps == 0) continue;
 
                     var createdSet = new Set {
@@ -128,24 +131,29 @@ public class ExerciseController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
-    // deploy test
-  /*  [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteTodo(int id)
-    {
-        try
-        {
-            var todo = await _context.Todos.FindAsync(id);
-            if (todo == null) return NotFound();
-            _context.Todos.Remove(todo);
+
+    [HttpDelete("deleteExercise/{exerciseId}")]
+    public async Task<IActionResult> DeleteExercise(long exerciseId) {
+        
+        try{
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            // Delete exercise that match the userId and exercise id from the request
+            var exercise = await _context.Exercises.FirstOrDefaultAsync(e => e.Id == exerciseId && e.UserId == userId);
+
+            if (exercise == null) return NotFound();
+
+            _context.Exercises.Remove(exercise);
+
             await _context.SaveChangesAsync();
+
             return NoContent();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Delete Error: {ex.Message}");
-            return BadRequest(ex.Message);
+            Console.WriteLine($"Insert Error: {ex.Message}");
+            return BadRequest(ex.Message);  
         }
     }
-
-    */
+   
 }

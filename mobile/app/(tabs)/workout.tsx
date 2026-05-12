@@ -178,6 +178,18 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
     }
   };
 
+  const deleteExercise = async (id: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/exercises/deleteExercise/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` },
+      });
+      if (res.ok) await fetchExercises();
+    } catch (err) {
+      console.error("Failed to delete exercise", err);
+    }
+  };
+
   const addExistingExercise = (ex: { id: string; name: string; muscleGroup: string }) => {
     const newEx: Exercise = {
       id: ex.id,
@@ -228,6 +240,8 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
       })
     );
   };
+
+  
 
   // --- RENDER ---
 
@@ -387,10 +401,15 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
               </Pressable>
             </View>
             {predefinedExercises.map((ex) => (
-              <Pressable key={ex.id} style={styles.existingExerciseRow} onPress={() => addExistingExercise(ex)}>
+              <View key={ex.id} style={styles.existingExerciseRow}>
+                <Pressable style={{ flex: 1 }} onPress={() => addExistingExercise(ex)}>
                 <Text style={styles.existingName}>{ex.name}</Text>
                 <Text style={styles.existingMuscle}>{ex.muscleGroup}</Text>
               </Pressable>
+              <Pressable onPress={() => deleteExercise(ex.id)}>
+                <Text style={{ color: "lightgrey", fontSize: 30, fontWeight: "400" }}>×</Text>
+              </Pressable>
+            </View>
             ))}
             <Pressable style={styles.closeModalButton} onPress={() => setShowChooseModal(false)}>
               <Text style={styles.cancelText}>Cancel</Text>
