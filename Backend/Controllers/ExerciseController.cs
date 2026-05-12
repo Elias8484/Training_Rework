@@ -64,6 +64,11 @@ public class ExerciseController : ControllerBase
     public async Task<IActionResult> SaveWorkout([FromBody] SaveWorkoutRequest req)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        
+        int workoutTotalExercises = 0;
+        int workoutTotalSets = 0;
+        double workoutTotalKg = 0;
+
 
         try{
             var workout = new Workout {
@@ -84,6 +89,8 @@ public class ExerciseController : ControllerBase
                     ExerciseId = exercise.ExerciseId,
                 };
 
+                workoutTotalExercises++;
+
                 _context.WorkoutEntries.Add(workoutEntry);
                 await _context.SaveChangesAsync();
 
@@ -94,9 +101,15 @@ public class ExerciseController : ControllerBase
                        Reps = set.reps 
                     };
 
+                    workoutTotalKg += set.Kg;
+                    workoutTotalSets++;
                     _context.Sets.Add(createdSet);
                 }
             }
+
+            workout.TotalExercises = workoutTotalExercises;
+            workout.TotalSets = workoutTotalSets;
+            workout.TotalKg = workoutTotalKg;
 
             await _context.SaveChangesAsync();
 
