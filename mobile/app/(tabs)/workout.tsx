@@ -390,8 +390,9 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
         transparent={true}
         onRequestClose={() => setShowChooseModal(false)}
       >
-        <Pressable style={styles.centeredOverlay} onPress={() => setShowChooseModal(false)}>
-          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+        <View style={styles.centeredOverlay}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowChooseModal(false)} />
+          <View style={styles.modalContent}>
             <View style={styles.modalTitleRow}>
               <Pressable style={styles.modalTitleButton} onPress={() => console.log("Select clicked")}>
                 <Text style={styles.modalTitle}>Select Exercise</Text>
@@ -400,22 +401,24 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
                 <Text style={styles.modalTitle}>Discover</Text>
               </Pressable>
             </View>
-            {predefinedExercises.map((ex) => (
-              <View key={ex.id} style={styles.existingExerciseRow}>
-                <Pressable style={{ flex: 1 }} onPress={() => addExistingExercise(ex)}>
-                <Text style={styles.existingName}>{ex.name}</Text>
-                <Text style={styles.existingMuscle}>{ex.muscleGroup}</Text>
-              </Pressable>
-              <Pressable onPress={() => deleteExercise(ex.id)}>
-                <Text style={{ color: "lightgrey", fontSize: 30, fontWeight: "400" }}>×</Text>
-              </Pressable>
-            </View>
-            ))}
+            <ScrollView onStartShouldSetResponder={() => true}>
+              {predefinedExercises.map((ex) => (
+                <View key={ex.id} style={styles.existingExerciseRow}>
+                  <Pressable style={{ flex: 1 }} onPress={() => addExistingExercise(ex)}>
+                    <Text style={styles.existingName}>{ex.name}</Text>
+                    <Text style={styles.existingMuscle}>{ex.muscleGroup}</Text>
+                  </Pressable>
+                  <Pressable onPress={() => {console.log("Deleting id:", ex.id); deleteExercise(ex.id);}}>
+                    <Text style={{ color: "lightgrey", fontSize: 30, fontWeight: "400" }}>×</Text>
+                  </Pressable>
+                </View>
+              ))}
+            </ScrollView>
             <Pressable style={styles.closeModalButton} onPress={() => setShowChooseModal(false)}>
               <Text style={styles.cancelText}>Cancel</Text>
             </Pressable>
           </View>
-        </Pressable>
+        </View>
       </Modal>
 
       {/* Modal: Card action menu — bottom sheet */}

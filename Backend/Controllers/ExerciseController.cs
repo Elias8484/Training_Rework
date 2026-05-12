@@ -134,7 +134,7 @@ public class ExerciseController : ControllerBase
 
     [HttpDelete("deleteExercise/{exerciseId}")]
     public async Task<IActionResult> DeleteExercise(long exerciseId) {
-        
+        Console.WriteLine($"Deleting exercise id: {exerciseId}");
         try{
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
