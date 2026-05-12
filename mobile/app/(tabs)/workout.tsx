@@ -103,6 +103,31 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
     }
   };
 
+  const saveWorkoutPost = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/exercises/saveWorkout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: "My Workout",
+          exercises: activeExercises.map(ex => ({
+            exerciseId: ex.id,
+            sets: ex.sets.map(s => ({
+              kg: parseFloat(s.weight) || 0,
+              reps: parseInt(s.reps) || 0
+            }))
+          }))
+        }),
+      });
+      const data = await res.json();
+    } catch(err) {
+      console.error("Failed to save workout", err);
+    }
+  };
+
     // Runs fetchexercises when screen first loads
    useEffect(() => {
     fetchExercises();
@@ -300,7 +325,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
 
       {activeExercises.length > 0 && (
         <View style={styles.fixedFooter}>
-          <Pressable style={styles.saveWorkoutButton} onPress={() => console.log("Save clicked")}>
+          <Pressable style={styles.saveWorkoutButton} onPress={() => saveWorkoutPost()}>
             <Text style={styles.saveWorkoutText}>Save Workout</Text>
           </Pressable>
         </View>

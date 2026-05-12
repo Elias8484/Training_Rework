@@ -14,6 +14,11 @@ public class ExerciseController : ControllerBase
 
     public record CreateExerciseRequest(string Name, string MuscleGroup);
 
+    // Nested saveworkout request with the 3 records below
+    public record SetRequest(decimal Kg, int reps);
+    public record ExerciseRequest(string ExerciseId, List<SetRequest> Sets);
+    public record SaveWorkoutRequest(string Name, List<ExerciseRequest> Exercises);
+
     public ExerciseController(AppDbContext context)
     {
         _context = context;
@@ -48,6 +53,20 @@ public class ExerciseController : ControllerBase
             await _context.SaveChangesAsync();
             return Ok(exercise);
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Insert Error: {ex.Message}");
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPost("saveWorkout")]
+    public async Task<IActionResult> SaveWorkout([FromBody] SaveWorkoutRequest req)
+    {
+        try{
+             return Ok("saveworkout sucess" + req.Exercises[0].ExerciseId);
+        }
+
         catch (Exception ex)
         {
             Console.WriteLine($"Insert Error: {ex.Message}");
