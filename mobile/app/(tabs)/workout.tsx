@@ -105,6 +105,17 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
 
   const saveWorkoutPost = async () => {
     try {
+
+      console.log("Sending:", JSON.stringify({
+        exercises: activeExercises.map(ex => ({
+          exerciseId: ex.id,
+          sets: ex.sets.map(s => ({
+            kg: parseFloat(s.weight.replace(',', '.')) || 0,
+            reps: parseInt(s.reps) || 0
+          }))
+        }))
+      }));
+
       const res = await fetch(`${API_BASE}/api/exercises/saveWorkout`, {
         method: "POST",
         headers: {
@@ -116,7 +127,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
           exercises: activeExercises.map(ex => ({
             exerciseId: ex.id,
             sets: ex.sets.map(s => ({
-              kg: parseFloat(s.weight) || 0,
+              kg: parseFloat(s.weight.replace(',', '.')) || 0,
               reps: parseInt(s.reps) || 0
             }))
           }))
