@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import {StyleSheet, Text, View, Pressable, TextInput, FlatList, Dimensions, Modal, ScrollView, Alert, Animated, ViewToken } from "react-native";
 import { useAuth } from "../../context/auth";
 import Paginator from "../../components/Paginator";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
 const width = Dimensions.get("window").width;
@@ -56,7 +57,9 @@ function BottomSheetModal({
 }
 
 export default function WorkoutScreen() {
-  const { token } = useAuth();
+  const { token, user} = useAuth();
+  const sessionKey = `activeWorkout_${user?.id}`;
+
   const [activeExercises, setActiveExercises] = useState<Exercise[]>([]);
   
   // Array of exercise objects that starts as an empty array on first load, updated with the function
@@ -104,46 +107,86 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
   };
 
   const saveWorkoutPost = async () => {
-    try {
+     Alert.alert(
+      "Save Workout?",
+      undefined,
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Save", onPress: async () => {
 
-      console.log("Sending:", JSON.stringify({
-        exercises: activeExercises.map(ex => ({
-          exerciseId: ex.id,
-          sets: ex.sets.map(s => ({
-            kg: parseFloat(s.weight.replace(',', '.')) || 0,
-            reps: parseInt(s.reps) || 0
-          }))
-        }))
-      }));
-
-      const res = await fetch(`${API_BASE}/api/exercises/saveWorkout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: "My Workout",
-          exercises: activeExercises.map(ex => ({
-            exerciseId: ex.id,
-            sets: ex.sets.map(s => ({
-              kg: parseFloat(s.weight.replace(',', '.')) || 0,
-              reps: parseInt(s.reps) || 0
-            }))
-          }))
-        }),
-      });
-      const text = await res.text();
-      console.log("Response", text);
-    } catch(err) {
-      console.error("Failed to save workout", err);
-    }
+          try {
+            const res = await fetch(`${API_BASE}/api/exercises/saveWorkout`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                name: "My Workout",
+                exercises: activeExercises.map(ex => ({
+                  exerciseId: ex.id.split('-')[0],
+                  sets: ex.sets.map(s => ({
+                    kg: parseFloat(s.weight.replace(',', '.')) || 0,
+                    reps: parseInt(s.reps) || 0
+                  }))
+                }))
+              }),
+            });
+            const text = await res.text();
+            console.log("Response", text);
+            if(res.ok){
+              await AsyncStorage.removeItem(sessionKey);
+              setActiveExercises([]);
+            }
+          } catch(err) {
+            console.error("Failed to save workout", err);
+          }
+        }}
+      ]
+    );
   };
 
     // Runs fetchexercises when screen first loads
    useEffect(() => {
     fetchExercises();
   }, []);
+
+  useEffect(() => {
+    const loadSession = async () => {
+      try {
+        const saved = await AsyncStorage.getItem(sessionKey);
+        if (!saved) return;
+        const { exercises, savedAt } = JSON.parse(saved);
+        const hoursPassed = (Date.now() - savedAt) / (1000 * 60 * 60);
+        if (hoursPassed > 12) {
+          Alert.alert(
+            "Continue Workout?",
+            "You have an unfinished workout from earlier. Continue or start a new workout?",
+            [
+              { text: "Start New", onPress: () => AsyncStorage.removeItem(sessionKey) },
+              { text: "Continue", onPress: () => setActiveExercises(exercises) }
+            ]
+          );
+        } else {
+          setActiveExercises(exercises);
+        }
+      } catch (err) {
+        console.error("Failed to load session", err);
+      }
+    };
+    loadSession();
+  }, []);
+
+  useEffect(() => {
+    if (activeExercises.length > 0) {
+      AsyncStorage.setItem(sessionKey, JSON.stringify({
+        exercises: activeExercises,
+        savedAt: Date.now()
+      }));
+    } else {
+      AsyncStorage.removeItem(sessionKey);
+    }
+  } , [activeExercises]);
 
   const createNewExercise = async () => {
     if (!newName.trim()) return;
@@ -192,7 +235,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
 
   const addExistingExercise = (ex: { id: string; name: string; muscleGroup: string }) => {
     const newEx: Exercise = {
-      id: ex.id,
+      id: `${ex.id}-${Date.now()}`,
       name: ex.name,
       muscleGroup: ex.muscleGroup,
       sets: [{ id: Date.now().toString() + "-set", weight: "", reps: "" }],
