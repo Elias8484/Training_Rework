@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import {StyleSheet, Text, View, Pressable, TextInput, FlatList, Dimensions, Modal, ScrollView, Alert, Animated, ViewToken } from "react-native";
+import {StyleSheet, Text, View, Pressable, TextInput, FlatList, Dimensions, Modal, ScrollView, Alert, Animated, ViewToken, KeyboardAvoidingView, Platform } from "react-native";
 import { useAuth } from "../../context/auth";
 import Paginator from "../../components/Paginator";
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -43,15 +43,20 @@ function BottomSheetModal({
       transparent={true}
       onRequestClose={onClose}
     >
-      <Pressable style={styles.modalOverlay} onPress={onClose}>
-        {/* Sheet slides up independently */}
+      <KeyboardAvoidingView 
+        style={styles.modalOverlay}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        
         <Animated.View
           style={[styles.bottomSheet, { transform: [{ translateY: slideAnim }] }]}
           onStartShouldSetResponder={() => true}
         >
           {children}
         </Animated.View>
-      </Pressable>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -531,14 +536,14 @@ const styles = StyleSheet.create({
   bottomSheet: { backgroundColor: "white", padding: 25, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 40 },
 
   // Centered modal (Create exercise)
-  modalContent: { backgroundColor: "white", padding: 20, minHeight: 300, borderRadius: 16, marginHorizontal: 2, marginBottom: "auto", marginTop: "auto" },
+  modalContent: { backgroundColor: "white", padding: 20, minHeight: 300, maxHeight: 600, borderRadius: 16, marginHorizontal: 20, marginBottom: "auto", marginTop: "auto" },
   modalTitle: { fontSize: 16, fontWeight: "bold" },
   modalTitleRow: { flexDirection: "row", gap: 10, marginBottom: 20 },
   modalTitleButton: { flex: 1, backgroundColor: "#f0f0f0", paddingVertical: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   input: { borderWidth: 1, borderColor: "#ddd", borderRadius: 10, padding: 15, marginBottom: 15, fontSize: 16 },
   modalActions: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10 },
-  cancelText: { color: "black", fontSize: 16, fontWeight: "600" },
-  saveButton: { backgroundColor: "#000", paddingHorizontal: 25, paddingVertical: 12, borderRadius: 10 },
+  cancelText: { color: "black", fontSize: 16, fontWeight: "600", marginBottom: 10 },
+  saveButton: { backgroundColor: "#000", paddingHorizontal: 25, paddingVertical: 12, borderRadius: 10, marginBottom: 20 },
   saveText: { color: "white", fontWeight: "bold", fontSize: 16 },
 
   existingExerciseRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: "#eee" },
