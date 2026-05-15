@@ -25,6 +25,8 @@ function RootNavigator() {
     }
   }, [user, isLoading, segments]);
 
+  if (isLoading) return null;
+
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
