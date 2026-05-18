@@ -216,7 +216,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
         muscleGroup: data.muscleGroup,
         sets: [{ id: Date.now().toString() + "-set", weight: "", reps: "" }],
       };
-      setActiveExercises([...activeExercises, newEx]);
+      setActiveExercises([newEx, ...activeExercises]);
       setNewName("");
       setNewMuscle("");
       setShowCreateModal(false);
@@ -245,7 +245,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
       muscleGroup: ex.muscleGroup,
       sets: [{ id: Date.now().toString() + "-set", weight: "", reps: "" }],
     };
-    setActiveExercises([...activeExercises, newEx]);
+    setActiveExercises([newEx, ...activeExercises]);
     setShowChooseModal(false);
   };
 
