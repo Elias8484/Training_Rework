@@ -155,5 +155,34 @@ public class ExerciseController : ControllerBase
             return BadRequest(ex.Message);  
         }
     }
+
+    [HttpGet("getLastExerciseData/{exerciseId}")]
+    public async Task<IActionResult> GetLastSetsData(long exerciseId)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        
+        var sets = await _context.Sets
+            .FromSqlRaw(@"
+                WITH last_entry AS (
+                    SELECT we.workout_entry_id
+                    FROM workout_entries we
+                    JOIN workouts w ON we.workout_id = w.workout_id
+                    WHERE we.exercise_id = {0}
+                    AND w.user_id = {1}
+                    ORDER BY w.created_at DESC
+                    LIMIT 1
+                )
+                SELECT s.set_id, s.workout_entry_id, s.kg, s.reps
+                FROM sets s
+                JOIN last_entry le ON s.workout_entry_id = le.workout_entry_id
+                ORDER BY s.set_id ASC
+            ", exerciseId, userId)
+            .ToListAsync();
+
+        if (sets.Count == 0) return Ok(new { sets = new List<object>() });
+
+
+        return Ok(new { sets = sets.Select(s => new { s.Kg, s.Reps }) });
+    }
    
 }

@@ -7,8 +7,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
 const width = Dimensions.get("window").width;
 
-type WorkoutSet = { id: string; weight: string; reps: string };
-type Exercise = { id: string; name: string; muscleGroup: string; sets: WorkoutSet[] };
+type WorkoutSet = { id: string; weight: string; reps: string;
+                    lastKg?: number; lastReps?: number;
+                  };
+type Exercise = { id: string; name: string; muscleGroup: string; sets: WorkoutSet[]; };
 
 // Reusable bottom-sheet modal with fade overlay + slide-up sheet
 function BottomSheetModal({
@@ -58,6 +60,31 @@ function BottomSheetModal({
         </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
+  );
+}
+
+// For calculating and updating the set percentage-increase, from previous session
+function TrendBadge({ set }: { set: WorkoutSet }) {
+  if (set.lastKg === undefined || set.lastReps === undefined) return <View style={{ flex: 0.5 }} />;
+
+  const currentKg = parseFloat(set.weight.replace(',', '.')) || 0;
+  const currentReps = parseInt(set.reps) || 0;
+  if (currentKg === 0 || currentReps === 0) return <View style={{ flex: 0.5 }} />;
+
+  const e1RM = (kg: number, reps: number) => reps === 1 ? kg : kg * (1 + reps / 30);
+  const current = e1RM(currentKg, currentReps);
+  const last = e1RM(set.lastKg, set.lastReps);
+
+  const diff = ((current - last) / last) * 100;
+  const trend = diff > 0 ? 1 : diff < 0 ? -1 : 0;
+  if (trend === 0) return <Text style={{ flex: 0.5, textAlign: "center", color: "#aaa", fontSize: 12 }}>—</Text>;
+
+  const color = trend === 1 ? "#4CAF50" : "#e53935";
+  const arrow = trend === 1 ? "↑" : "↓";
+  return (
+    <Text style={{ flex: 0.5, textAlign: "center", color, fontSize: 11, fontWeight: "700" }}>
+      {arrow}{Math.abs(diff).toFixed(1)}%
+    </Text>
   );
 }
 
@@ -238,13 +265,38 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
     }
   };
 
-  const addExistingExercise = (ex: { id: string; name: string; muscleGroup: string }) => {
-    const newEx: Exercise = {
+  const addExistingExercise = async (ex: { id: string; name: string; muscleGroup: string }) => {
+    let sets: WorkoutSet[] = [{ id: Date.now() + "-set-0", weight: "", reps: "" }];
+
+    // Get previous kg and reps from last exercises session, for the chosen exercise
+    try {
+      const res = await fetch(`${API_BASE}/api/exercises/getLastExerciseData/${ex.id}`, {
+        headers: {
+          "Authorization": `Bearer ${token}` },
+      });
+      if (res.ok){
+        const data = await res.json();
+        if (data.sets?.length > 0){
+          sets = data.sets.map((s: any, i: number) => ({
+            id: `${Date.now()}-set-${i}`,
+            weight: "",
+            reps: "",
+            lastKg: s.kg,
+            lastReps: s.reps,
+          }));
+        }
+      }
+
+    } catch (err) {
+      console.error("Failed to fetch indivudal exercise set data");
+    }
+      const newEx: Exercise = {
       id: `${ex.id}-${Date.now()}`,
       name: ex.name,
       muscleGroup: ex.muscleGroup,
-      sets: [{ id: Date.now().toString() + "-set", weight: "", reps: "" }],
+      sets,
     };
+      
     setActiveExercises([newEx, ...activeExercises]);
     setShowChooseModal(false);
   };
@@ -335,6 +387,8 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
                 value={set.reps}
                 onChangeText={(val) => updateSet(exercise.id, set.id, "reps", val)}
               />
+              
+              <TrendBadge set={set} />
               <Pressable 
                 style={styles.removeSetButton} 
                 onPress={() => removeSet(exercise.id, set.id)}
