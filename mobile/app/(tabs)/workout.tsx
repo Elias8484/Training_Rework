@@ -3,6 +3,7 @@ import {StyleSheet, Text, View, Pressable, TextInput, FlatList, Dimensions, Moda
 import { useAuth } from "../../context/auth";
 import Paginator from "../../components/Paginator";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Presets } from 'react-native-pulsar';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
 const width = Dimensions.get("window").width;
@@ -112,7 +113,29 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
   };
 
   const saveWorkoutPost = async () => {
-     Alert.alert(
+    
+    let hasEmptyFields = false;
+
+    for (const exercise of activeExercises) {
+      for (const set of exercise.sets) {
+        // Check if weight or reps is empty (or just spaces)
+        if (!set.weight.trim() || !set.reps.trim()) {
+          hasEmptyFields = true;
+          break; // Stop checking this exercise's sets
+        }
+      }
+      if (hasEmptyFields) break; // Stop checking other exercises
+    }
+
+    if (hasEmptyFields) {
+      Alert.alert(
+        "Incomplete Workout",
+        "Please fill out both weight and reps for all sets before saving."
+      );
+      return; // Stop the function here so it doesn't save
+    }
+
+     Alert.alert (
       "Save Workout?",
       undefined,
       [
@@ -245,6 +268,13 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
       muscleGroup: ex.muscleGroup,
       sets: [{ id: Date.now().toString() + "-set", weight: "", reps: "" }],
     };
+
+    // Check for duplicates based on the original exercise ID (ignoring the timestamp)
+    if (activeExercises.some(e => e.name === newEx.name)) {
+      Alert.alert("Duplicate Exercise", "This exercise is already in your workout.");
+      return;
+    }
+
     setActiveExercises([newEx, ...activeExercises]);
     setShowChooseModal(false);
   };
@@ -399,7 +429,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
 
       {activeExercises.length > 0 && (
         <View style={styles.fixedFooter}>
-          <Pressable style={styles.saveWorkoutButton} onPress={() => saveWorkoutPost()}>
+          <Pressable style={styles.saveWorkoutButton} onPress={() => {Presets.ping(); saveWorkoutPost();}}>
             <Text style={styles.saveWorkoutText}>Save Workout</Text>
           </Pressable>
         </View>
@@ -443,16 +473,16 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
           <View style={styles.modalContent}>
             <View style={styles.modalTitleRow}>
               <Pressable style={styles.modalTitleButton} onPress={() => console.log("Select clicked")}>
-                <Text style={styles.modalTitle}>Select Exercise</Text>
+                <Text style={styles.modalTitle2}>Select Exercise</Text>
               </Pressable>
               <Pressable style={styles.modalTitleButton} onPress={() => console.log("Discover clicked")}>
-                <Text style={styles.modalTitle}>Discover</Text>
+                <Text style={styles.modalTitle2}>Discover</Text>
               </Pressable>
             </View>
             <ScrollView onStartShouldSetResponder={() => true}>
               {predefinedExercises.map((ex) => (
                 <View key={ex.id} style={styles.existingExerciseRow}>
-                  <Pressable style={{ flex: 1 }} onPress={() => addExistingExercise(ex)}>
+                  <Pressable style={{ flex: 1 }} onPress={() => {Presets.ping(); addExistingExercise(ex);}}>
                     <Text style={styles.existingName}>{ex.name}</Text>
                     <Text style={styles.existingMuscle}>{ex.muscleGroup}</Text>
                   </Pressable>
@@ -462,9 +492,15 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
                 </View>
               ))}
             </ScrollView>
-            <Pressable style={styles.closeModalButton} onPress={() => setShowChooseModal(false)}>
-              <Text style={styles.cancelText}>Cancel</Text>
-            </Pressable>
+              <Pressable 
+                style={({ pressed }) => [
+                  styles.closeModalSection,
+                  pressed && { backgroundColor: '#f0f0f0' } // Changes background to grey when pressed
+                ]} 
+                onPress={() => setShowChooseModal(false)}
+              >
+                <Text style={styles.cancelTextCentered}>Cancel</Text>
+              </Pressable>
           </View>
         </View>
       </Modal>
@@ -537,7 +573,8 @@ const styles = StyleSheet.create({
 
   // Centered modal (Create exercise)
   modalContent: { backgroundColor: "white", padding: 20, minHeight: 300, maxHeight: 600, borderRadius: 16, marginHorizontal: 20, marginBottom: "auto", marginTop: "auto" },
-  modalTitle: { fontSize: 16, fontWeight: "bold" },
+  modalTitle: { fontSize: 14, fontWeight: "bold", marginBottom: 20, color: "black" },
+  modalTitle2: { fontSize: 14, fontWeight: "bold", color: "black" },
   modalTitleRow: { flexDirection: "row", gap: 10, marginBottom: 20 },
   modalTitleButton: { flex: 1, backgroundColor: "#f0f0f0", paddingVertical: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   input: { borderWidth: 1, borderColor: "#ddd", borderRadius: 10, padding: 15, marginBottom: 15, fontSize: 16 },
@@ -546,8 +583,11 @@ const styles = StyleSheet.create({
   saveButton: { backgroundColor: "#000", paddingHorizontal: 25, paddingVertical: 12, borderRadius: 10, marginBottom: 20 },
   saveText: { color: "white", fontWeight: "bold", fontSize: 16 },
 
+  closeModalSection: {marginTop: 10,paddingVertical: 18, borderTopWidth: 1, borderTopColor: "#eee", alignItems: "center", justifyContent: "center", marginHorizontal: -20, marginBottom: -20, borderBottomLeftRadius: 16, borderBottomRightRadius: 16, },
+  cancelTextCentered: { color: "black", fontSize: 16, fontWeight: "600", },
+
   existingExerciseRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: "#eee" },
-  existingName: { fontSize: 18, fontWeight: "500" },
+  existingName: { fontSize: 16, fontWeight: "500" },
   existingMuscle: { color: "#888" },
   closeModalButton: { marginTop: 5, paddingTop: 10, alignItems: "center" },
   
