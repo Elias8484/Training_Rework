@@ -1,8 +1,20 @@
 import { BottomTabBarButtonProps } from '@react-navigation/bottom-tabs';
 import { PlatformPressable } from '@react-navigation/elements';
-import { Presets } from 'react-native-pulsar';
+import * as Haptics from 'expo-haptics';
+// import { Presets } from 'react-native-pulsar';
 
 export function HapticTab(props: BottomTabBarButtonProps) {
+  return (
+    <PlatformPressable
+      {...props}
+      onPressIn={(ev) => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        props.onPressIn?.(ev);
+      }}
+    />
+  );
+}
+/* export function HapticTab(props: BottomTabBarButtonProps) {
   return (
     <PlatformPressable
       {...props}
@@ -15,3 +27,5 @@ export function HapticTab(props: BottomTabBarButtonProps) {
     />
   );
 }
+
+*/

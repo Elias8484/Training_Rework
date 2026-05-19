@@ -3,7 +3,8 @@ import {StyleSheet, Text, View, Pressable, TextInput, FlatList, Dimensions, Moda
 import { useAuth } from "../../context/auth";
 import Paginator from "../../components/Paginator";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Presets } from 'react-native-pulsar';
+// import { Presets } from 'react-native-pulsar';
+import * as Haptics from 'expo-haptics';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
 const width = Dimensions.get("window").width;
@@ -11,7 +12,9 @@ const width = Dimensions.get("window").width;
 type WorkoutSet = { id: string; weight: string; reps: string;
                     lastKg?: number; lastReps?: number;
                   };
-type Exercise = { id: string; name: string; muscleGroup: string; sets: WorkoutSet[]; };
+type Exercise = { id: string; name: string; muscleGroup: string;
+                  sets: WorkoutSet[];
+                  lastSets?: { kg: number; reps: number }[]; };
 
 // Reusable bottom-sheet modal with fade overlay + slide-up sheet
 function BottomSheetModal({
@@ -290,6 +293,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
 
   const addExistingExercise = async (ex: { id: string; name: string; muscleGroup: string }) => {
     let sets: WorkoutSet[] = [{ id: Date.now() + "-set-0", weight: "", reps: "" }];
+    let lastSets: { kg: number; reps: number }[] | undefined;
 
     // Get previous kg and reps from last exercises session, for the chosen exercise
     try {
@@ -307,6 +311,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
             lastKg: s.kg,
             lastReps: s.reps,
           }));
+          lastSets = data.sets.map((s: any) => ({ kg: s.kg, reps: s.reps}));
         }
       }
 
@@ -318,6 +323,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
       name: ex.name,
       muscleGroup: ex.muscleGroup,
       sets,
+      lastSets,
     };
       
     // Check for duplicates based on the original exercise ID (ignoring the timestamp)
@@ -337,11 +343,21 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
 
   const addSet = (exerciseId: string) => {
     setActiveExercises(
-      activeExercises.map((ex) =>
-        ex.id === exerciseId
-          ? { ...ex, sets: [...ex.sets, { id: Date.now().toString(), weight: "", reps: "" }] }
-          : ex
-      )
+      activeExercises.map((ex) => {
+        if (ex.id !== exerciseId) return ex;
+        const last = ex.lastSets?.[ex.sets.length];
+        return {
+          ...ex,
+          sets: [...ex.sets, {
+            id: Date.now().toString(),
+            weight: "",
+            reps: "",
+            lastKg: last?.kg,
+            lastReps: last?.reps,
+
+          }],   
+        };
+      })
     );
   };
 
@@ -360,12 +376,17 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
   const removeSet = (exerciseId: string, setId: string) => {
     setActiveExercises(
       activeExercises.map((ex) => {
-        if (ex.id === exerciseId) {
+        if (ex.id !== exerciseId) return ex;
           // Filtrer det sæt fra, som har det id vi vil slette
-          const updatedSets = ex.sets.filter((s) => s.id !== setId);
-          return { ...ex, sets: updatedSets };
-        }
-        return ex;
+          // og opdater den nye rækkefølge af sets til at blive ved med at matche lastsets kg og reps 1 til 1
+        const updatedSets = ex.sets
+                            .filter((s) => s.id !== setId)
+                            .map((s, i) => ({
+                              ...s,
+                              lastKg: ex.lastSets?.[i]?.kg,
+                              lastReps: ex.lastSets?.[i]?.reps,
+                            }));
+        return { ...ex, sets: updatedSets };
       })
     );
   };
@@ -404,14 +425,16 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
               <Text style={styles.setIndex}>{index + 1}</Text>
               <TextInput
                 style={styles.numberInput}
-                placeholder="0"
+                placeholder={set.lastKg !== undefined ? String(set.lastKg) : "0"}
+                placeholderTextColor="#ddd"
                 keyboardType="numeric"
                 value={set.weight}
                 onChangeText={(val) => updateSet(exercise.id, set.id, "weight", val)}
               />
               <TextInput
                 style={styles.numberInput}
-                placeholder="0"
+                placeholder={set.lastReps !== undefined ? String(set.lastReps) : "0"}
+                placeholderTextColor="#ddd"
                 keyboardType="numeric"
                 value={set.reps}
                 onChangeText={(val) => updateSet(exercise.id, set.id, "reps", val)}
@@ -482,7 +505,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
 
       {activeExercises.length > 0 && (
         <View style={styles.fixedFooter}>
-          <Pressable style={styles.saveWorkoutButton} onPress={() => {Presets.ping(); saveWorkoutPost();}}>
+          <Pressable style={styles.saveWorkoutButton} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); saveWorkoutPost();}}>
             <Text style={styles.saveWorkoutText}>Save Workout</Text>
           </Pressable>
         </View>
@@ -535,7 +558,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
             <ScrollView onStartShouldSetResponder={() => true}>
               {predefinedExercises.map((ex) => (
                 <View key={ex.id} style={styles.existingExerciseRow}>
-                  <Pressable style={{ flex: 1 }} onPress={() => {Presets.ping(); addExistingExercise(ex);}}>
+                  <Pressable style={{ flex: 1 }} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); addExistingExercise(ex);}}>
                     <Text style={styles.existingName}>{ex.name}</Text>
                     <Text style={styles.existingMuscle}>{ex.muscleGroup}</Text>
                   </Pressable>
