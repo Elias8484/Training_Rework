@@ -8,6 +8,7 @@ import * as Haptics from 'expo-haptics';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
 const width = Dimensions.get("window").width;
+const MUSCLE_GROUPS = ["Chest", "Triceps", "Shoulders", "Back", "Biceps", "Legs", "Glutes,", "Calves", "Core", "Forearms", "Traps" ];
 
 type WorkoutSet = { id: string; weight: string; reps: string;
                     lastKg?: number; lastReps?: number;
@@ -505,7 +506,13 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
 
       {activeExercises.length > 0 && (
         <View style={styles.fixedFooter}>
-          <Pressable style={styles.saveWorkoutButton} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); saveWorkoutPost();}}>
+          <Pressable style={styles.saveWorkoutButton} onPress={() => { 
+            if (Platform.OS === "ios") {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); 
+            } else if (Platform.OS === "android") {
+            Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Confirm); // Trigger a light, precise tap from Pulsar on Android
+            }
+            saveWorkoutPost();}}>
             <Text style={styles.saveWorkoutText}>Save Workout</Text>
           </Pressable>
         </View>
@@ -521,12 +528,26 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
           value={newName}
           onChangeText={setNewName}
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Muscle Group"
-          value={newMuscle}
-          onChangeText={setNewMuscle}
-        />
+        <Text style={styles.sectionLabel}>Select Muscle Group</Text>
+                <View style={styles.chipContainer}>
+                  {MUSCLE_GROUPS.map((group) => (
+                    <Pressable
+                      key={group}
+                      style={[
+                        styles.chip,
+                        newMuscle === group && styles.chipSelected
+                      ]}
+                      onPress={() => setNewMuscle(group)}
+                    >
+                      <Text style={[
+                        styles.chipText,
+                        newMuscle === group && styles.chipTextSelected
+                      ]}>
+                        {group}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
         <View style={styles.modalActions}>
           <Pressable onPress={() => setShowCreateModal(false)}>
             <Text style={styles.cancelText}>Cancel</Text>
@@ -558,7 +579,14 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
             <ScrollView onStartShouldSetResponder={() => true}>
               {predefinedExercises.map((ex) => (
                 <View key={ex.id} style={styles.existingExerciseRow}>
-                  <Pressable style={{ flex: 1 }} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); addExistingExercise(ex);}}>
+                  <Pressable style={{ flex: 1 }} onPress={() => { 
+                    if (Platform.OS === "ios") {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                    } else if (Platform.OS === "android") {
+                    Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Confirm); // Trigger a light, precise tap from Pulsar on Android
+                    }
+                    addExistingExercise(ex);
+                    }}>
                     <Text style={styles.existingName}>{ex.name}</Text>
                     <Text style={styles.existingMuscle}>{ex.muscleGroup}</Text>
                   </Pressable>
@@ -658,6 +686,13 @@ const styles = StyleSheet.create({
   cancelText: { color: "black", fontSize: 16, fontWeight: "600", marginBottom: 10 },
   saveButton: { backgroundColor: "#000", paddingHorizontal: 25, paddingVertical: 12, borderRadius: 10, marginBottom: 20 },
   saveText: { color: "white", fontWeight: "bold", fontSize: 16 },
+
+  sectionLabel: { fontSize: 14, fontWeight: "600", color: "#666", marginBottom: 10, marginTop: 5, textAlign: "center" },
+  chipContainer: { flexDirection: "row", flexWrap: "wrap", marginBottom: 20, gap: 8, justifyContent: "center" },
+  chip: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, backgroundColor: "#f0f0f0", borderWidth: 1, borderColor: "transparent" },
+  chipSelected: { backgroundColor: "#000", borderColor: "#000" },
+  chipText: { fontSize: 14, color: "#333", fontWeight: "500" },
+  chipTextSelected: { color: "white" },
 
   closeModalSection: {marginTop: 10,paddingVertical: 18, borderTopWidth: 1, borderTopColor: "#eee", alignItems: "center", justifyContent: "center", marginHorizontal: -20, marginBottom: -20, borderBottomLeftRadius: 16, borderBottomRightRadius: 16, },
   cancelTextCentered: { color: "black", fontSize: 16, fontWeight: "600", },
