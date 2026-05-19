@@ -8,7 +8,7 @@ import * as Haptics from 'expo-haptics';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
 const width = Dimensions.get("window").width;
-const MUSCLE_GROUPS = ["Chest", "Triceps", "Shoulders", "Back", "Biceps", "Legs", "Glutes,", "Calves", "Core", "Forearms", "Traps" ];
+const MUSCLE_GROUPS = ["Chest", "Back", "Biceps", "Triceps", "Shoulders", "Quads", "Hamstrings", "Glutes", "Calves", "Core", "Forearms", "Traps", "Other"];
 
 type WorkoutSet = { id: string; weight: string; reps: string;
                     lastKg?: number; lastReps?: number;
