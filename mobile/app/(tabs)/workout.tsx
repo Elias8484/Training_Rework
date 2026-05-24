@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from "react";
-import {StyleSheet, Text, View, Pressable, TextInput, FlatList, Dimensions, Modal, ScrollView, Alert, Animated, ViewToken, KeyboardAvoidingView, Platform } from "react-native";
+import {StyleSheet, Text, View, Pressable, TextInput, FlatList, Dimensions, ScrollView, Alert, Animated, ViewToken, Platform } from "react-native";
 import { useAuth } from "../../context/auth";
 import Paginator from "../../components/Paginator";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import BottomSheetModal from '../../components/modals/BottomSheetModal';
 import * as Haptics from 'expo-haptics';
 import CreateExerciseModal from "../../components/modals/CreateExerciseModal";
 import ChooseExerciseModal from "../../components/modals/ChooseExerciseModal";
 import ExerciseMenuModal from "../../components/modals/ExerciseMenuModal";
+import ProgramsModal from "../../components/modals/ProgramsModal";
+import SaveProgramModal from "../../components/modals/SaveProgramModal";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
 const width = Dimensions.get("window").width;
@@ -57,6 +58,9 @@ export default function WorkoutScreen() {
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showChooseModal, setShowChooseModal] = useState(false);
+  const [programs, setPrograms] = useState<any[]>([]);
+  const [showProgramsModal, setShowProgramsModal] = useState(false);
+  const [showSaveProgramModal, setShowSaveProgramModal] = useState(false);
 
   // New: card action menu state
   const [menuExerciseId, setMenuExerciseId] = useState<string | null>(null);
@@ -344,6 +348,97 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
     );
   };
 
+// Henter programmer fra telefonens hukommelse når skærmen åbnes
+  useEffect(() => {
+    const loadSavedPrograms = async () => {
+      try {
+        const saved = await AsyncStorage.getItem(`programs_${user?.id}`);
+        if (saved) setPrograms(JSON.parse(saved));
+      } catch (err) {
+        console.error("Failed to load programs", err);
+      }
+    };
+    loadSavedPrograms();
+  }, []);
+
+  // Gemmer de nuværende aktive øvelser som et nyt program
+  const saveCurrentAsProgram = async (programName: string) => {
+    if (activeExercises.length === 0) {
+      Alert.alert("Error", "You need to add exercises before saving a program.");
+      return;
+    }
+
+    const newProgram = {
+      id: Date.now().toString(),
+      name: programName,
+      // Vi gemmer øvelserne med deres struktur, så vi ved, hvor mange sæt der er
+      exercises: activeExercises.map(ex => ({
+        id: ex.id.split('-')[0], // Det originale øvelses-ID fra databasen
+        name: ex.name,
+        muscleGroup: ex.muscleGroup,
+        setsCount: ex.sets.length // Vi gemmer kun antallet af sæt
+      }))
+    };
+
+    const updatedPrograms = [newProgram, ...programs];
+    setPrograms(updatedPrograms);
+    await AsyncStorage.setItem(`programs_${user?.id}`, JSON.stringify(updatedPrograms));
+    
+    setShowSaveProgramModal(false);
+    setShowProgramsModal(true); // Gå tilbage til programoversigten
+  };
+
+  // Sletter et gemt program
+  const deleteProgram = async (programId: string) => {
+    const updated = programs.filter(p => p.id !== programId);
+    setPrograms(updated);
+    await AsyncStorage.setItem(`programs_${user?.id}`, JSON.stringify(updated));
+  };
+
+  // Indlæser et program og henter den seneste data (lastKg og lastReps) fra API'et!
+  const loadProgram = async (program: any) => {
+    // Vi bruger Promise.all fordi vi gerne vil kalde dit API for hver øvelse i programmet
+    const loadedExercises = await Promise.all(program.exercises.map(async (ex: any, index: number) => {
+      
+      let sets = Array.from({ length: ex.setsCount || 1 }).map((_, i) => ({
+        id: `${Date.now()}-set-${index}-${i}`,
+        weight: "",
+        reps: "",
+      }));
+      let lastSets: { kg: number; reps: number }[] | undefined = undefined;
+
+      try {
+        // Vi kalder API'et præcis som i "addExistingExercise"
+        const res = await fetch(`${API_BASE}/api/exercises/getLastExerciseData/${ex.id}`, {
+          headers: { "Authorization": `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.sets?.length > 0) {
+             lastSets = data.sets.map((s: any) => ({ kg: s.kg, reps: s.reps }));
+             sets = sets.map((s, i) => ({
+               ...s,
+               lastKg: lastSets?.[i]?.kg,
+               lastReps: lastSets?.[i]?.reps
+             }));
+          }
+        }
+      } catch (err) {
+        console.error("Could not fetch last data for", ex.name);
+      }
+
+      return {
+        id: `${ex.id}-${Date.now()}-${index}`, // Unikt ID for denne træning
+        name: ex.name,
+        muscleGroup: ex.muscleGroup,
+        sets,
+        lastSets
+      };
+    }));
+
+    setActiveExercises(loadedExercises);
+    setShowProgramsModal(false);
+  };
   
 
   // --- RENDER ---
@@ -351,28 +446,34 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
   const renderExerciseCard = ({ item: exercise }: { item: Exercise }) => (
     <View style={styles.cardContainer}>
       <View style={styles.exerciseCard}>
+      <View style={styles.cardHeader}>
+        <View style={styles.cardHeaderText}>
+          <Text style={styles.exerciseName}>{exercise.name}</Text>
+          <Text style={styles.muscleGroup}>{exercise.muscleGroup}</Text>
+        </View>
+        {/* Three-dot menu button */}
+        <Pressable
+          style={styles.menuButton}
+          onPress={() => setMenuExerciseId(exercise.id)}
+          hitSlop={10}
+        >
+          <Text style={styles.menuDots}>⋮</Text>
+        </Pressable>
+      </View>
+
+        <View style={styles.setHeader}>
+          {/* Flex 0.5 og venstrestillet for at matche setIndex */}
+          <Text style={[styles.headerText, { flex: 0.2, textAlign: "left" }]}>Set</Text>
+          
+          {/* Flex 1, centreret og marginHorizontal: 5 for at matche numberInput præcist */}
+          <Text style={[styles.headerText, { flex: 0.5, textAlign: "center", marginLeft: 12 }]}>kg</Text>
+          <Text style={[styles.headerText, { flex: 1, textAlign: "center", marginLeft: 30 }]}>Reps</Text>
+          
+          {/* De to tomme pladser til TrendBadge og slette-knappen */}
+          <View style={{ flex: 0.5 }} /> 
+          <View style={{ flex: 0.5 }} />
+        </View>
         <ScrollView showsVerticalScrollIndicator={false}>
-          <View style={styles.cardHeader}>
-            <View style={styles.cardHeaderText}>
-              <Text style={styles.exerciseName}>{exercise.name}</Text>
-              <Text style={styles.muscleGroup}>{exercise.muscleGroup}</Text>
-            </View>
-            {/* Three-dot menu button */}
-            <Pressable
-              style={styles.menuButton}
-              onPress={() => setMenuExerciseId(exercise.id)}
-              hitSlop={10}
-            >
-              <Text style={styles.menuDots}>⋮</Text>
-            </Pressable>
-          </View>
-
-          <View style={styles.setHeader}>
-            <Text style={styles.headerText}>Set</Text>
-            <Text style={styles.headerText}>kg</Text>
-            <Text style={styles.headerText}>Reps</Text>
-          </View>
-
           {exercise.sets.map((set, index) => (
             <View key={set.id} style={styles.setRow}>
               <Text style={styles.setIndex}>{index + 1}</Text>
@@ -405,7 +506,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
           ))}
 
           <Pressable style={styles.addSetButton} onPress={() => addSet(exercise.id)}>
-            <Text style={styles.addSetText}>+ Add Set</Text>
+            <Text style={styles.addSetText}>+</Text>
           </Pressable>
         </ScrollView>
       </View>
@@ -420,7 +521,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
         <Pressable style={styles.primaryButton} onPress={() => setShowChooseModal(true)}>
           <Text style={styles.buttonText}>Exercises</Text>
         </Pressable>
-        <Pressable style={styles.programButton} onPress={() => console.log("program clicked")}>
+        <Pressable style={styles.programButton} onPress={() => setShowProgramsModal(true)}>
           <Text style={styles.buttonText}>Program</Text>
         </Pressable>
         <Pressable style={styles.createIconButton} onPress={() => setShowCreateModal(true)}>
@@ -467,6 +568,12 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
             saveWorkoutPost();}}>
             <Text style={styles.saveWorkoutText}>Save Workout</Text>
           </Pressable>
+          <Pressable 
+            style={styles.saveAsProgramButton} 
+            onPress={() => setShowSaveProgramModal(true)}
+          >
+            <Text style={styles.saveAsProgramText}>Save as Program</Text>
+          </Pressable>
         </View>
       )}
 
@@ -489,6 +596,20 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
         onClose={() => setMenuExerciseId(null)}
         onRemove={() => menuExerciseId && removeExercise(menuExerciseId)}
       />
+
+      <ProgramsModal
+        visible={showProgramsModal}
+        onClose={() => setShowProgramsModal(false)}
+        programs={programs}
+        onSelect={loadProgram}
+        onDelete={deleteProgram}
+      />
+
+      <SaveProgramModal
+        visible={showSaveProgramModal}
+        onClose={() => setShowSaveProgramModal(false)}
+        onSave={saveCurrentAsProgram}
+      />
     </View>
   );
 }
@@ -504,20 +625,23 @@ const styles = StyleSheet.create({
   createIconButton: { flex: 1, backgroundColor: "#4CAF50", padding: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   createIconText: { color: "white", fontWeight: "bold", fontSize: 24, lineHeight: 24 },
 
-  fixedFooter: { paddingHorizontal: 20, paddingBottom: 20, backgroundColor: "#f8f9fa" },
-  saveWorkoutButton: { backgroundColor: "#000", paddingVertical: 18, borderRadius: 16, alignItems: "center", shadowColor: "#000", shadowOpacity: 1, shadowRadius: 8, elevation: 3 },
-  saveWorkoutText: { color: "white", fontSize: 20, fontWeight: "bold" },
+  fixedFooter: { paddingHorizontal: 50, paddingBottom: 12, backgroundColor: "#f8f9fa" },
+  saveWorkoutButton: { backgroundColor: "#000", paddingVertical: 12, borderRadius: 16, alignItems: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 5, elevation: 4 },
+  saveWorkoutText: { color: "white", fontSize: 16, fontWeight: "bold" },
+  
+  saveAsProgramButton: { backgroundColor: "#e0e0e0", paddingVertical: 10, borderRadius: 16, alignItems: "center", marginTop: 10, shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 5, elevation: 4 },
+  saveAsProgramText: { color: "black", fontSize: 14, fontWeight: "600" },
 
   emptyState: { flex: 1, justifyContent: "center", alignItems: "center" },
   emptyText: { color: "#888", fontSize: 16 },
 
   swipeList: { flex: 1 },
-  cardContainer: { width: width, paddingHorizontal: 20, paddingBottom: 20 },
-  exerciseCard: { backgroundColor: "white", padding: 20, borderRadius: 16, flex: 1, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 8, elevation: 3 },
-  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, paddingBottom: 10 },
-  cardHeaderText: { flex: 1 },
-  exerciseName: { fontSize: 24, fontWeight: "bold", color: "black" },
-  muscleGroup: { fontSize: 14, color: "#888", marginTop: 4, textTransform: "uppercase", letterSpacing: 1 },
+  cardContainer: { width: width, paddingHorizontal: 20, paddingBottom: 20, paddingTop: 5 },
+  exerciseCard: { backgroundColor: "white", padding: 20, borderRadius: 16, flex: 1, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 8, elevation: 5 },
+  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", paddingBottom: 10 },
+  cardHeaderText: { flex: 1, },
+  exerciseName: { fontSize: 20, fontWeight: "bold", color: "black" },
+  muscleGroup: { fontSize: 12, color: "#888", marginTop: 4, textTransform: "uppercase", letterSpacing: 1 },
 
   // Three-dot button
   menuButton: { padding: 4 },
@@ -526,10 +650,10 @@ const styles = StyleSheet.create({
   setHeader: { flexDirection: "row", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#f0f0f0", marginBottom: 10 },
   headerText: { flex: 1, fontWeight: "700", color: "#888", textAlign: "left", fontSize: 12, textTransform: "uppercase" },
   setRow: { flexDirection: "row", alignItems: "center", marginBottom: 8, paddingVertical: 4 },
-  setIndex: { flex: 0.5, textAlign: "left", fontSize: 16, fontWeight: "600", color: "#333" },
-  numberInput: { flex: 1, backgroundColor: "#f0f0f0", borderRadius: 8, padding: 12, marginHorizontal: 5, textAlign: "center", fontSize: 16, fontWeight: "500" },
-  removeSetButton: { flex: 0.5, alignItems: "center", justifyContent: "flex-end",},
+  setIndex: { flex: 0.3, textAlign: "left", fontSize: 16, fontWeight: "600", color: "#333" },
+  numberInput: { flex: 0.7, backgroundColor: "#f0f0f0", borderRadius: 8, padding: 12, marginHorizontal: 5, textAlign: "center", fontSize: 16, fontWeight: "500" },
+  removeSetButton: { flex: 0.4, alignItems: "center", justifyContent: "flex-end",},
   removeSetText: { color: "lightgrey", fontSize: 20, fontWeight: "400" },
-  addSetButton: { marginTop: 15, paddingVertical: 10, backgroundColor: "#f0f8ff", borderRadius: 8 },
+  addSetButton: { width: "50%", marginTop: 1, paddingVertical: 10, backgroundColor: "#f0f8ff", borderRadius: 8, marginHorizontal: 50, alignSelf: "flex-start" },
   addSetText: { color: "#007AFF", fontWeight: "600", textAlign: "center", fontSize: 16 },
 });

@@ -69,7 +69,7 @@ export default function ChooseExerciseModal({ visible, onClose, exercises, onSel
 }
 
 const styles = StyleSheet.create({
-  centeredOverlay: { flex: 1, backgroundColor: "rgba(0, 0, 0, 0.6)", justifyContent: "center", paddingHorizontal: 20 },
+  centeredOverlay: { flex: 1, backgroundColor: "rgba(0, 0, 0, 0.6)", justifyContent: "center", paddingHorizontal: 5 },
   modalContent: { backgroundColor: "white", padding: 20, minHeight: 300, maxHeight: 600, borderRadius: 16, marginHorizontal: 20, marginBottom: "auto", marginTop: "auto" },
   modalTitleRow: { flexDirection: "row", gap: 10, marginBottom: 20 },
   modalTitleButton: { flex: 1, backgroundColor: "#f0f0f0", paddingVertical: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
