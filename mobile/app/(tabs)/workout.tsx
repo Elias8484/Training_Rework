@@ -521,41 +521,45 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
       {/* Modal: Create new exercise (centered, fade — kept as-is) */}
 {/* Modal: Add Exercise — bottom sheet */}
       <BottomSheetModal visible={showCreateModal} onClose={() => setShowCreateModal(false)}>
-        <Text style={styles.modalTitle}>Add Exercise</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Exercise Name"
-          value={newName}
-          onChangeText={setNewName}
-        />
-        <Text style={styles.sectionLabel}>Select Muscle Group</Text>
-                <View style={styles.chipContainer}>
-                  {MUSCLE_GROUPS.map((group) => (
-                    <Pressable
-                      key={group}
-                      style={[
-                        styles.chip,
-                        newMuscle === group && styles.chipSelected
-                      ]}
-                      onPress={() => setNewMuscle(group)}
-                    >
-                      <Text style={[
-                        styles.chipText,
-                        newMuscle === group && styles.chipTextSelected
-                      ]}>
-                        {group}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-        <View style={styles.modalActions}>
-          <Pressable onPress={() => setShowCreateModal(false)}>
-            <Text style={styles.cancelText}>Cancel</Text>
-          </Pressable>
-          <Pressable style={styles.saveButton} onPress={createNewExercise}>
-            <Text style={styles.saveText}>Save & Add</Text>
-          </Pressable>
-        </View>
+        <ScrollView showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        >
+          <Text style={styles.modalTitle}>Add Exercise</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Exercise Name"
+            value={newName}
+            onChangeText={setNewName}
+          />
+          <Text style={styles.sectionLabel}>Select Muscle Group</Text>
+                  <View style={styles.chipContainer}>
+                    {MUSCLE_GROUPS.map((group) => (
+                      <Pressable
+                        key={group}
+                        style={[
+                          styles.chip,
+                          newMuscle === group && styles.chipSelected
+                        ]}
+                        onPress={() => setNewMuscle(group)}
+                      >
+                        <Text style={[
+                          styles.chipText,
+                          newMuscle === group && styles.chipTextSelected
+                        ]}>
+                          {group}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+          <View style={styles.modalActions}>
+            <Pressable onPress={() => setShowCreateModal(false)}>
+              <Text style={styles.cancelText}>Cancel</Text>
+            </Pressable>
+            <Pressable style={styles.saveButton} onPress={createNewExercise}>
+              <Text style={styles.saveText}>Save & Add</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
       </BottomSheetModal>
 
       {/* Modal: Choose existing — centered */}
@@ -574,6 +578,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
               </Pressable>
               <Pressable style={styles.modalTitleButton} onPress={() => console.log("Discover clicked")}>
                 <Text style={styles.modalTitle2}>Discover</Text>
+                <Text>comming soon..</Text>
               </Pressable>
             </View>
             <ScrollView onStartShouldSetResponder={() => true}>
@@ -683,8 +688,8 @@ const styles = StyleSheet.create({
   modalTitleButton: { flex: 1, backgroundColor: "#f0f0f0", paddingVertical: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   input: { borderWidth: 1, borderColor: "#ddd", borderRadius: 10, padding: 15, marginBottom: 15, fontSize: 16 },
   modalActions: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10 },
-  cancelText: { color: "black", fontSize: 16, fontWeight: "600", marginBottom: 10 },
-  saveButton: { backgroundColor: "#000", paddingHorizontal: 25, paddingVertical: 12, borderRadius: 10, marginBottom: 20 },
+  cancelText: { color: "black", fontSize: 16, fontWeight: "600", },
+  saveButton: { backgroundColor: "#000", paddingHorizontal: 20, paddingVertical: 12, borderRadius: 10, marginBottom: 10 },
   saveText: { color: "white", fontWeight: "bold", fontSize: 16 },
 
   sectionLabel: { fontSize: 14, fontWeight: "600", color: "#666", marginBottom: 10, marginTop: 5, textAlign: "center" },
