@@ -65,9 +65,6 @@ export default function WorkoutScreen() {
   // New: card action menu state
   const [menuExerciseId, setMenuExerciseId] = useState<string | null>(null);
 
-  const [newName, setNewName] = useState("");
-  const [newMuscle, setNewMuscle] = useState("");
-
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
   
@@ -203,8 +200,8 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
     }
   } , [activeExercises]);
 
-  const createNewExercise = async () => {
-    if (!newName.trim()) return;
+  const createNewExercise = async (name: string, muscle: string) => {
+    if (!name.trim()) return;
     try {
       const res = await fetch(`${API_BASE}/api/exercises/createNewExercise`, {
         method: "POST",
@@ -212,7 +209,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
         },
-        body: JSON.stringify({ name: newName, muscleGroup: newMuscle || "None" }),
+        body: JSON.stringify({ name: name, muscleGroup: muscle || "None" }),
       });
 
        console.log("Status:", res.status);
@@ -227,8 +224,6 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
         sets: [{ id: Date.now().toString() + "-set", weight: "", reps: "" }],
       };
       setActiveExercises([newEx, ...activeExercises]);
-      setNewName("");
-      setNewMuscle("");
       setShowCreateModal(false);
       await fetchExercises();
     } catch (err: any) {
