@@ -3,8 +3,11 @@ import {StyleSheet, Text, View, Pressable, TextInput, FlatList, Dimensions, Moda
 import { useAuth } from "../../context/auth";
 import Paginator from "../../components/Paginator";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// import { Presets } from 'react-native-pulsar';
+import BottomSheetModal from '../../components/modals/BottomSheetModal';
 import * as Haptics from 'expo-haptics';
+import CreateExerciseModal from "../../components/modals/CreateExerciseModal";
+import ChooseExerciseModal from "../../components/modals/ChooseExerciseModal";
+import ExerciseMenuModal from "../../components/modals/ExerciseMenuModal";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
 const width = Dimensions.get("window").width;
@@ -16,57 +19,6 @@ type WorkoutSet = { id: string; weight: string; reps: string;
 type Exercise = { id: string; name: string; muscleGroup: string;
                   sets: WorkoutSet[];
                   lastSets?: { kg: number; reps: number }[]; };
-
-// Reusable bottom-sheet modal with fade overlay + slide-up sheet
-function BottomSheetModal({
-  visible,
-  onClose,
-  children,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  children: React.ReactNode;
-}) {
-  const slideAnim = useRef(new Animated.Value(300)).current;
-
-  // When visibility changes, run the slide animation
-  const prevVisible = useRef(false);
-  if (visible && !prevVisible.current) {
-    Animated.spring(slideAnim, {
-      toValue: 0,
-      useNativeDriver: true,
-      bounciness: 4,
-    }).start();
-  }
-  if (!visible && prevVisible.current) {
-    slideAnim.setValue(300);
-  }
-  prevVisible.current = visible;
-
-  return (
-    <Modal
-      visible={visible}
-      animationType="fade"        // overlay fades
-      transparent={true}
-      onRequestClose={onClose}
-    >
-      <KeyboardAvoidingView 
-        style={styles.modalOverlay}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
-
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-        
-        <Animated.View
-          style={[styles.bottomSheet, { transform: [{ translateY: slideAnim }] }]}
-          onStartShouldSetResponder={() => true}
-        >
-          {children}
-        </Animated.View>
-      </KeyboardAvoidingView>
-    </Modal>
-  );
-}
 
 // For calculating and updating the set percentage-increase, from previous session
 function TrendBadge({ set }: { set: WorkoutSet }) {
@@ -518,118 +470,25 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
         </View>
       )}
 
-      {/* Modal: Create new exercise (centered, fade — kept as-is) */}
-{/* Modal: Add Exercise — bottom sheet */}
-      <BottomSheetModal visible={showCreateModal} onClose={() => setShowCreateModal(false)}>
-        <ScrollView showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        >
-          <Text style={styles.modalTitle}>Add Exercise</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Exercise Name"
-            value={newName}
-            onChangeText={setNewName}
-          />
-          <Text style={styles.sectionLabel}>Select Muscle Group</Text>
-                  <View style={styles.chipContainer}>
-                    {MUSCLE_GROUPS.map((group) => (
-                      <Pressable
-                        key={group}
-                        style={[
-                          styles.chip,
-                          newMuscle === group && styles.chipSelected
-                        ]}
-                        onPress={() => setNewMuscle(group)}
-                      >
-                        <Text style={[
-                          styles.chipText,
-                          newMuscle === group && styles.chipTextSelected
-                        ]}>
-                          {group}
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </View>
-          <View style={styles.modalActions}>
-            <Pressable onPress={() => setShowCreateModal(false)}>
-              <Text style={styles.cancelText}>Cancel</Text>
-            </Pressable>
-            <Pressable style={styles.saveButton} onPress={createNewExercise}>
-              <Text style={styles.saveText}>Save & Add</Text>
-            </Pressable>
-          </View>
-        </ScrollView>
-      </BottomSheetModal>
+      <CreateExerciseModal
+        visible={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSave={createNewExercise}
+      />
 
-      {/* Modal: Choose existing — centered */}
-      <Modal
+      <ChooseExerciseModal
         visible={showChooseModal}
-        animationType="fade"
-        transparent={true}
-        onRequestClose={() => setShowChooseModal(false)}
-      >
-        <View style={styles.centeredOverlay}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowChooseModal(false)} />
-          <View style={styles.modalContent}>
-            <View style={styles.modalTitleRow}>
-              <Pressable style={styles.modalTitleButton} onPress={() => console.log("Select clicked")}>
-                <Text style={styles.modalTitle2}>Select Exercise</Text>
-              </Pressable>
-              <Pressable style={styles.modalTitleButton} onPress={() => console.log("Discover clicked")}>
-                <Text style={styles.modalTitle2}>Discover</Text>
-                <Text>comming soon..</Text>
-              </Pressable>
-            </View>
-            <ScrollView onStartShouldSetResponder={() => true}>
-              {predefinedExercises.map((ex) => (
-                <View key={ex.id} style={styles.existingExerciseRow}>
-                  <Pressable style={{ flex: 1 }} onPress={() => { 
-                    if (Platform.OS === "ios") {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                    } else if (Platform.OS === "android") {
-                    Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Confirm); // Trigger a light, precise tap from Pulsar on Android
-                    }
-                    addExistingExercise(ex);
-                    }}>
-                    <Text style={styles.existingName}>{ex.name}</Text>
-                    <Text style={styles.existingMuscle}>{ex.muscleGroup}</Text>
-                  </Pressable>
-                  <Pressable onPress={() => {console.log("Deleting id:", ex.id); deleteExercise(ex.id);}}>
-                    <Text style={{ color: "lightgrey", fontSize: 30, fontWeight: "400" }}>×</Text>
-                  </Pressable>
-                </View>
-              ))}
-            </ScrollView>
-              <Pressable 
-                style={({ pressed }) => [
-                  styles.closeModalSection,
-                  pressed && { backgroundColor: '#f0f0f0' } // Changes background to grey when pressed
-                ]} 
-                onPress={() => setShowChooseModal(false)}
-              >
-                <Text style={styles.cancelTextCentered}>Cancel</Text>
-              </Pressable>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowChooseModal(false)}
+        exercises={predefinedExercises}
+        onSelect={addExistingExercise}
+        onDelete={deleteExercise}
+      />
 
-      {/* Modal: Card action menu — bottom sheet */}
-      <BottomSheetModal
+      <ExerciseMenuModal
         visible={menuExerciseId !== null}
         onClose={() => setMenuExerciseId(null)}
-      >
-        <Text style={styles.modalTitle}>Exercise Options</Text>
-        <Pressable
-          style={styles.menuActionRow}
-          onPress={() => menuExerciseId && removeExercise(menuExerciseId)}
-        >
-          <Text style={styles.menuActionDestructive}>Remove Exercise</Text>
-        </Pressable>
-        <Pressable style={styles.closeModalButton} onPress={() => setMenuExerciseId(null)}>
-          <Text style={styles.cancelText}>Cancel</Text>
-        </Pressable>
-      </BottomSheetModal>
+        onRemove={() => menuExerciseId && removeExercise(menuExerciseId)}
+      />
     </View>
   );
 }
@@ -673,43 +532,4 @@ const styles = StyleSheet.create({
   removeSetText: { color: "lightgrey", fontSize: 20, fontWeight: "400" },
   addSetButton: { marginTop: 15, paddingVertical: 10, backgroundColor: "#f0f8ff", borderRadius: 8 },
   addSetText: { color: "#007AFF", fontWeight: "600", textAlign: "center", fontSize: 16 },
-
-  // Shared modal overlay
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0, 0, 0, 0.6)", justifyContent: "flex-end" },
-
-  // Bottom sheet (used by BottomSheetModal)
-  bottomSheet: { backgroundColor: "white", padding: 25, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 40 },
-
-  // Centered modal (Create exercise)
-  modalContent: { backgroundColor: "white", padding: 20, minHeight: 300, maxHeight: 600, borderRadius: 16, marginHorizontal: 20, marginBottom: "auto", marginTop: "auto" },
-  modalTitle: { fontSize: 14, fontWeight: "bold", marginBottom: 20, color: "black" },
-  modalTitle2: { fontSize: 14, fontWeight: "bold", color: "black" },
-  modalTitleRow: { flexDirection: "row", gap: 10, marginBottom: 20 },
-  modalTitleButton: { flex: 1, backgroundColor: "#f0f0f0", paddingVertical: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  input: { borderWidth: 1, borderColor: "#ddd", borderRadius: 10, padding: 15, marginBottom: 15, fontSize: 16 },
-  modalActions: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10 },
-  cancelText: { color: "black", fontSize: 16, fontWeight: "600", },
-  saveButton: { backgroundColor: "#000", paddingHorizontal: 20, paddingVertical: 12, borderRadius: 10, marginBottom: 10 },
-  saveText: { color: "white", fontWeight: "bold", fontSize: 16 },
-
-  sectionLabel: { fontSize: 14, fontWeight: "600", color: "#666", marginBottom: 10, marginTop: 5, textAlign: "center" },
-  chipContainer: { flexDirection: "row", flexWrap: "wrap", marginBottom: 20, gap: 8, justifyContent: "center" },
-  chip: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, backgroundColor: "#f0f0f0", borderWidth: 1, borderColor: "transparent" },
-  chipSelected: { backgroundColor: "#000", borderColor: "#000" },
-  chipText: { fontSize: 14, color: "#333", fontWeight: "500" },
-  chipTextSelected: { color: "white" },
-
-  closeModalSection: {marginTop: 10,paddingVertical: 18, borderTopWidth: 1, borderTopColor: "#eee", alignItems: "center", justifyContent: "center", marginHorizontal: -20, marginBottom: -20, borderBottomLeftRadius: 16, borderBottomRightRadius: 16, },
-  cancelTextCentered: { color: "black", fontSize: 16, fontWeight: "600", },
-
-  existingExerciseRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: "#eee" },
-  existingName: { fontSize: 16, fontWeight: "500" },
-  existingMuscle: { color: "#888" },
-  closeModalButton: { marginTop: 5, paddingTop: 10, alignItems: "center" },
-  
-  centeredOverlay: {flex: 1,backgroundColor: "rgba(0, 0, 0, 0.6)",justifyContent: "center",paddingHorizontal: 20,},
-
-  // Card action menu
-  menuActionRow: { paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: "#eee" },
-  menuActionDestructive: { fontSize: 18, color: "#e53935", fontWeight: "500" },
 });
