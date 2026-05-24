@@ -463,7 +463,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
 
         <View style={styles.setHeader}>
           {/* Flex 0.5 og venstrestillet for at matche setIndex */}
-          <Text style={[styles.headerText, { flex: 0.2, textAlign: "left" }]}>Set</Text>
+          <Text style={[styles.headerText, { flex: 0.5, textAlign: "left" }]}>Set</Text>
           
           {/* Flex 1, centreret og marginHorizontal: 5 for at matche numberInput præcist */}
           <Text style={[styles.headerText, { flex: 0.5, textAlign: "center", marginLeft: 12 }]}>kg</Text>
@@ -653,7 +653,7 @@ const styles = StyleSheet.create({
   setIndex: { flex: 0.3, textAlign: "left", fontSize: 16, fontWeight: "600", color: "#333" },
   numberInput: { flex: 0.7, backgroundColor: "#f0f0f0", borderRadius: 8, padding: 12, marginHorizontal: 5, textAlign: "center", fontSize: 16, fontWeight: "500" },
   removeSetButton: { flex: 0.4, alignItems: "center", justifyContent: "flex-end",},
-  removeSetText: { color: "lightgrey", fontSize: 20, fontWeight: "400" },
+  removeSetText: { color: "grey", fontSize: 20, fontWeight: "300" },
   addSetButton: { width: "50%", marginTop: 1, paddingVertical: 10, backgroundColor: "#f0f8ff", borderRadius: 8, marginHorizontal: 50, alignSelf: "flex-start" },
   addSetText: { color: "#007AFF", fontWeight: "600", textAlign: "center", fontSize: 16 },
 });

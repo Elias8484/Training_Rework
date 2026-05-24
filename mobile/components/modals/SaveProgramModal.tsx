@@ -1,6 +1,5 @@
-// components/modals/SaveProgramModal.tsx
 import React, { useState } from "react";
-import { StyleSheet, Text, View, Pressable, TextInput, ScrollView } from "react-native";
+import { StyleSheet, Text, Pressable, TextInput, ScrollView } from "react-native";
 import BottomSheetModal from "./BottomSheetModal";
 
 type Props = {
@@ -29,24 +28,26 @@ export default function SaveProgramModal({ visible, onClose, onSave }: Props) {
           onChangeText={setName}
           autoFocus={true}
         />
-        <View style={styles.modalActions}>
-          <Pressable onPress={onClose}>
-            <Text style={styles.cancelText}>Cancel</Text>
-          </Pressable>
-          <Pressable style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveText}>Save Program</Text>
-          </Pressable>
-        </View>
+        <Pressable style={styles.saveButton} onPress={handleSave}>
+          <Text style={styles.saveText}>Save Program</Text>
+        </Pressable>
       </ScrollView>
+
+      <Pressable 
+        style={({ pressed }) => [styles.closeModalSection, pressed && { backgroundColor: '#f0f0f0' }]} 
+        onPress={onClose}
+      >
+        <Text style={styles.cancelTextCentered}>Cancel</Text>
+      </Pressable>
     </BottomSheetModal>
   );
 }
 
 const styles = StyleSheet.create({
-  modalTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 20, color: "black" },
-  input: { borderWidth: 1, borderColor: "#ddd", borderRadius: 10, padding: 15, marginBottom: 15, fontSize: 16 },
-  modalActions: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10 },
-  cancelText: { color: "black", fontSize: 16, fontWeight: "600" },
-  saveButton: { backgroundColor: "#000", paddingHorizontal: 20, paddingVertical: 12, borderRadius: 10 },
-  saveText: { color: "white", fontWeight: "bold", fontSize: 16 },
+  modalTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 20, color: "black", textAlign: "center" },
+  input: { borderWidth: 1, borderColor: "#ddd", borderRadius: 10, padding: 15, marginBottom: 20, fontSize: 16 },
+  saveButton: { backgroundColor: "#000", paddingVertical: 12, borderRadius: 16, alignItems: "center", marginBottom: 5, marginHorizontal: 25 },
+  saveText: { color: "white", fontWeight: "bold", fontSize: 14 },
+  closeModalSection: { paddingVertical: 18, borderTopWidth: 1, borderTopColor: "#eee", alignItems: "center", justifyContent: "center", marginHorizontal: -25, marginBottom: -40, marginTop: 10 },
+  cancelTextCentered: { color: "black", fontSize: 16, fontWeight: "600" },
 });
