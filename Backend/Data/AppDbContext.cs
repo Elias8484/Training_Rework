@@ -17,6 +17,10 @@ public class AppDbContext : DbContext
 
     public DbSet<Set> Sets { get; set; }
 
+    public DbSet<Models.Program> Programs { get; set; }
+
+    public DbSet<ProgramEntry> ProgramEntries { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>().Property(u => u.Id).HasColumnName("user_id");
@@ -25,5 +29,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Workout>().Property(s => s.Id).HasColumnName("workout_id");
         modelBuilder.Entity<WorkoutEntry>().Property(s => s.Id).HasColumnName("workout_entry_id");
         modelBuilder.Entity<Set>().Property(s => s.Id).HasColumnName("set_id");
+        modelBuilder.Entity<Models.Program>().Property(s => s.Id).HasColumnName("program_id");
+        modelBuilder.Entity<ProgramEntry>().Property(s => s.Id).HasColumnName("program_entry_id");
     }
 }

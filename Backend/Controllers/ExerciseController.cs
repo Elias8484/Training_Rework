@@ -19,6 +19,8 @@ public class ExerciseController : ControllerBase
     public record ExerciseRequest(long ExerciseId, List<SetRequest> Sets);
     public record SaveWorkoutRequest(string Name, List<ExerciseRequest> Exercises);
 
+    public record SaveProgramRequest (string Name, List<long> ExerciseIds);
+
     public ExerciseController(AppDbContext context)
     {
         _context = context;
@@ -61,8 +63,7 @@ public class ExerciseController : ControllerBase
     }
 
     [HttpPost("saveWorkout")]
-    public async Task<IActionResult> SaveWorkout([FromBody] SaveWorkoutRequest req)
-    {
+    public async Task<IActionResult> SaveWorkout([FromBody] SaveWorkoutRequest req){
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         
         int workoutTotalExercises = 0;
@@ -157,8 +158,7 @@ public class ExerciseController : ControllerBase
     }
 
     [HttpGet("getLastExerciseData/{exerciseId}")]
-    public async Task<IActionResult> GetLastSetsData(long exerciseId)
-    {
+    public async Task<IActionResult> GetLastSetsData(long exerciseId){
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         
         var sets = await _context.Sets
@@ -183,6 +183,64 @@ public class ExerciseController : ControllerBase
 
 
         return Ok(new { sets = sets.Select(s => new { s.Kg, s.Reps }) });
+    }
+
+    [HttpPost("saveProgram")]
+    public async Task<IActionResult> SaveProgram([FromBody] SaveProgramRequest req){
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        
+        // Use the name of the program from the request and the userid and make 1 program table entry
+        try{
+            var program = new Backend.Models.Program {
+                UserId = userId,
+                Name = req.Name,
+                CreatedAt = DateTime.UtcNow,
+            };
+            // Save program instantly to DB so it gets an id that is needed for programEntry
+            _context.Programs.Add(program);
+            await _context.SaveChangesAsync();
+
+            // save each exerciseId from the request as an entry row in the program entry table
+            // using the newly created Programs-id to reference which Program the entry belongs to
+            foreach (var exerciseId in req.ExerciseIds){
+                var programEntry = new ProgramEntry {
+                    ProgramId = program.Id,
+                    ExerciseId = exerciseId,
+                };
+                _context.ProgramEntries.Add(programEntry);
+            }
+            await _context.SaveChangesAsync();
+            return Ok("saveworkout sucess");
+        }
+
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Insert Error: {ex.Message}");
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpGet("getPrograms")]
+    public async Task<IActionResult> GetPrograms()
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        
+        // Returns all programs for the current user.
+        // For each program, fetches matching entries from program_entries and returns their exercise IDs.
+        // Shape matches the frontend Program Type: [{ id, name, exercises: string[] }]
+        var programs = await _context.Programs
+            .Where(p => p.UserId == userId)
+            .Select(p => new {
+                id = p.Id.ToString(),
+                name = p.Name,
+                exercises = _context.ProgramEntries
+                    .Where(e => e.ProgramId == p.Id)
+                    .Select(e => e.ExerciseId.ToString())
+            })
+            .ToListAsync();
+                                                
+        return Ok(programs);
+        
     }
    
 }

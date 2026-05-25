@@ -21,6 +21,8 @@ type Exercise = { id: string; name: string; muscleGroup: string;
                   sets: WorkoutSet[];
                   lastSets?: { kg: number; reps: number }[]; };
 
+type Program = { id: string; name: string; exercises: string [] };
+
 // For calculating and updating the set percentage-increase, from previous session
 function TrendBadge({ set }: { set: WorkoutSet }) {
   if (set.lastKg === undefined || set.lastReps === undefined) return <View style={{ flex: 0.5 }} />;
@@ -58,7 +60,7 @@ export default function WorkoutScreen() {
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showChooseModal, setShowChooseModal] = useState(false);
-  const [programs, setPrograms] = useState<any[]>([]);
+  const [programs, setPrograms] = useState<Program[]>([]);
   const [showProgramsModal, setShowProgramsModal] = useState(false);
   const [showSaveProgramModal, setShowSaveProgramModal] = useState(false);
 
@@ -343,97 +345,78 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
     );
   };
 
-// Henter programmer fra telefonens hukommelse når skærmen åbnes
+// Henter programmer fra databasen når skærmen åbnes
   useEffect(() => {
-    const loadSavedPrograms = async () => {
-      try {
-        const saved = await AsyncStorage.getItem(`programs_${user?.id}`);
-        if (saved) setPrograms(JSON.parse(saved));
-      } catch (err) {
-        console.error("Failed to load programs", err);
-      }
-    };
-    loadSavedPrograms();
+    fetchPrograms();
   }, []);
+
+  const fetchPrograms = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/exercises/getPrograms`, {
+          headers: { "Authorization": `Bearer ${token}` },
+      });
+      if (res.ok) setPrograms(await res.json());
+    } catch (err) {
+      console.error("Failed to fetch programs", err);
+    }
+  } ;
 
   // Gemmer de nuværende aktive øvelser som et nyt program
   const saveCurrentAsProgram = async (programName: string) => {
-    if (activeExercises.length === 0) {
-      Alert.alert("Error", "You need to add exercises before saving a program.");
-      return;
-    }
+      if (activeExercises.length === 0) {
+        Alert.alert("Error", "You need to add exercises before saving a program.");
+        return;
+      }
 
-    const newProgram = {
-      id: Date.now().toString(),
-      name: programName,
-      // Vi gemmer øvelserne med deres struktur, så vi ved, hvor mange sæt der er
-      exercises: activeExercises.map(ex => ({
-        id: ex.id.split('-')[0], // Det originale øvelses-ID fra databasen
-        name: ex.name,
-        muscleGroup: ex.muscleGroup,
-        setsCount: ex.sets.length // Vi gemmer kun antallet af sæt
-      }))
-    };
+      try {
+        const res = await fetch(`${API_BASE}/api/exercises/saveProgram`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name: programName,
+            exerciseIds: activeExercises.map(ex => ({
+              id: ex.id.split('-')[0],
+            })),
+          }),
+        });
 
-    const updatedPrograms = [newProgram, ...programs];
-    setPrograms(updatedPrograms);
-    await AsyncStorage.setItem(`programs_${user?.id}`, JSON.stringify(updatedPrograms));
+        if(res.ok) {
+          await fetchPrograms();
+          setShowSaveProgramModal(false);
+          setShowProgramsModal(true); // Gå tilbage til programoversigten
+        }
     
-    setShowSaveProgramModal(false);
-    setShowProgramsModal(true); // Gå tilbage til programoversigten
+      } catch (err) {
+        console.error("failed to save exericse program", err);
+      }
   };
 
   // Sletter et gemt program
   const deleteProgram = async (programId: string) => {
-    const updated = programs.filter(p => p.id !== programId);
-    setPrograms(updated);
-    await AsyncStorage.setItem(`programs_${user?.id}`, JSON.stringify(updated));
-  };
-
-  // Indlæser et program og henter den seneste data (lastKg og lastReps) fra API'et!
-  const loadProgram = async (program: any) => {
-    // Vi bruger Promise.all fordi vi gerne vil kalde dit API for hver øvelse i programmet
-    const loadedExercises = await Promise.all(program.exercises.map(async (ex: any, index: number) => {
-      
-      let sets = Array.from({ length: ex.setsCount || 1 }).map((_, i) => ({
-        id: `${Date.now()}-set-${index}-${i}`,
-        weight: "",
-        reps: "",
-      }));
-      let lastSets: { kg: number; reps: number }[] | undefined = undefined;
-
       try {
-        // Vi kalder API'et præcis som i "addExistingExercise"
-        const res = await fetch(`${API_BASE}/api/exercises/getLastExerciseData/${ex.id}`, {
+        const res = await fetch(`${API_BASE}/api/programs/deleteProgram/${programId}`, {
+          method: "DELETE",
           headers: { "Authorization": `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.sets?.length > 0) {
-             lastSets = data.sets.map((s: any) => ({ kg: s.kg, reps: s.reps }));
-             sets = sets.map((s, i) => ({
-               ...s,
-               lastKg: lastSets?.[i]?.kg,
-               lastReps: lastSets?.[i]?.reps
-             }));
-          }
-        }
-      } catch (err) {
-        console.error("Could not fetch last data for", ex.name);
-      }
-
-      return {
-        id: `${ex.id}-${Date.now()}-${index}`, // Unikt ID for denne træning
-        name: ex.name,
-        muscleGroup: ex.muscleGroup,
-        sets,
-        lastSets
-      };
-    }));
-
-    setActiveExercises(loadedExercises);
-    setShowProgramsModal(false);
+      });
+      if (res.ok) await fetchPrograms();
+    } catch (err) {
+      console.error("Failed to delete program", err);
+    }
   };
+
+  // Load each exercise from the selected program by matching IDs with predefinedExercises,
+  // then add them one by one as exercisecards using addExistingExercise.
+const loadProgram = async (program: Program) => {
+  setShowProgramsModal(false);
+  setActiveExercises([]);
+  for (const exId of program.exercises) {
+     const exDetails = predefinedExercises.find(e => e.id === exId);
+      if (exDetails) await addExistingExercise(exDetails);
+  }
+};
   
 
   // --- RENDER ---
@@ -604,6 +587,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
         visible={showSaveProgramModal}
         onClose={() => setShowSaveProgramModal(false)}
         onSave={saveCurrentAsProgram}
+        workoutNames={activeExercises.map(ex => ex.name)}
       />
     </View>
   );
