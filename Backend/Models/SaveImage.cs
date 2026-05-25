@@ -14,4 +14,7 @@ public class SaveImage
 
     [Column("public_url")]
     public string PublicUrl { get; set; } = default!;
+
+    [Column("test")]
+    public string Test { get; set; } = default!;
 }
