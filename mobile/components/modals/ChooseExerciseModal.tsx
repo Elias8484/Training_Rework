@@ -1,9 +1,10 @@
 // components/modals/ChooseExerciseModal.tsx
-import React from "react";
-import { StyleSheet, Text, View, Pressable, ScrollView, Modal, Platform } from "react-native";
+import React, {useState} from "react";
+import { StyleSheet, Text, View, Pressable, ScrollView, Modal, Platform, Dimensions, TextInput } from "react-native";
 import * as Haptics from 'expo-haptics';
 
 type ExerciseData = { id: string; name: string; muscleGroup: string };
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 type Props = {
   visible: boolean;
@@ -14,6 +15,10 @@ type Props = {
 };
 
 export default function ChooseExerciseModal({ visible, onClose, exercises, onSelect, onDelete }: Props) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const filteredExercises = exercises.filter((ex) => 
+  ex.name.toLowerCase().includes(searchQuery.toLowerCase())
+);
   return (
     <Modal
       visible={visible}
@@ -36,6 +41,14 @@ export default function ChooseExerciseModal({ visible, onClose, exercises, onSel
             </Pressable>
           </View>
           
+          <TextInput
+          style={styles.searchInput}
+          placeholder="Search exercises..."
+          placeholderTextColor="#888"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCorrect={false}
+        />
           <ScrollView showsVerticalScrollIndicator={false}>
             {exercises.map((ex) => (
               <Pressable 
@@ -53,7 +66,7 @@ export default function ChooseExerciseModal({ visible, onClose, exercises, onSel
                   onSelect(ex);
                 }}
               >
-                <View style={{ flex: 1 }}>
+                <View style={{flex: 1}}>
                   <Text style={styles.existingName}>{ex.name}</Text>
                   <Text style={styles.existingMuscle}>{ex.muscleGroup}</Text>
                 </View>
@@ -87,25 +100,21 @@ export default function ChooseExerciseModal({ visible, onClose, exercises, onSel
 const styles = StyleSheet.create({
   centeredOverlay: { flex: 1, backgroundColor: "rgba(0, 0, 0, 0.6)", justifyContent: "center", paddingHorizontal: 20 },
   
-  /* * 1. ÆNDRING: Fjernet padding: 20! Nu går modalen helt ud til kanten indvendigt.
-   * Vi har kun paddingTop: 20 for at give luft i toppen.
-   */
-  modalContent: { backgroundColor: "white", paddingTop: 20, minHeight: 300, maxHeight: 600, borderRadius: 16 },
-  
-  /* 2. ÆNDRING: Tilføjet paddingHorizontal: 20, så knapperne i toppen holdes væk fra kanten */
+  modalContent: { backgroundColor: "white", paddingTop: 20, height: SCREEN_HEIGHT * 0.50, borderRadius: 16 },
   modalTitleRow: { flexDirection: "row", gap: 10, marginBottom: 10, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: "#f0f0f0", paddingBottom: 10 },
-  modalTitleButton: { flex: 1, backgroundColor: "#f0f0f0", paddingVertical: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  modalTitleButton: { flex: 1, backgroundColor: "#f0f0f0", paddingVertical: 12, borderRadius: 10, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 8, elevation: 5 },
   modalTitle2: { fontSize: 14, fontWeight: "bold", color: "black" },
   
-  /* 3. ÆNDRING: Rækkerne har nu IKKE negative margins. De fylder bare kassen ud og bruger paddingHorizontal */
   existingExerciseRow: { 
     flexDirection: "row", 
     justifyContent: "space-between", 
     alignItems: "center",
-    paddingBottom: 10, 
+    padding: 10, 
     paddingHorizontal: 20, 
     borderBottomWidth: 1, 
-    borderBottomColor: "#f0f0f0",
+    borderColor: "#f0f0f0",
+    borderTopWidth: 1,
+    borderRadius: 10,
   },
   existingName: { fontSize: 16, fontWeight: "600" },
   existingMuscle: { color: "#888", fontSize: 13, marginTop: 2 },
@@ -113,7 +122,18 @@ const styles = StyleSheet.create({
   deleteButton: { padding: 5, justifyContent: "center", alignItems: "center" },
   deleteButtonText: { color: "lightgrey", fontSize: 26, fontWeight: "400", lineHeight: 26 },
 
-  /* 4. ÆNDRING: Cancel-knappen sidder nu også naturligt fast i bunden uden negative margins */
   closeModalSection: { paddingVertical: 18, borderTopWidth: 1, borderTopColor: "#eee", alignItems: "center", justifyContent: "center", borderBottomLeftRadius: 16, borderBottomRightRadius: 16 },
   cancelTextCentered: { color: "black", fontSize: 16, fontWeight: "600" },
+
+  searchInput: {
+  backgroundColor: "white",
+  borderRadius: 16,
+  padding: 9,
+  fontSize: 14,
+  marginHorizontal: 10,
+  marginBottom: 8,
+  borderWidth: 1,
+  borderColor: "lightgrey",
+  shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 8, elevation: 5
+},
 });

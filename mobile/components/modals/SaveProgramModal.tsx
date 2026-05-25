@@ -54,7 +54,7 @@ export default function SaveProgramModal({ visible, onClose, onSave, workoutName
 
 const styles = StyleSheet.create({
   modalTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 20, color: "black", textAlign: "center" },
-  input: { borderWidth: 1, borderColor: "#ddd", borderRadius: 10, padding: 15, marginBottom: 20, fontSize: 16 },
+  input: { backgroundColor: "white", borderWidth: 1, borderColor: "lightgrey", borderRadius: 16, padding: 12, marginHorizontal: 8 ,marginBottom: 15, fontSize: 14, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 8, elevation: 5 },
   saveButton: { backgroundColor: "#000", paddingVertical: 12, borderRadius: 16, alignItems: "center", marginBottom: 5, marginHorizontal: 25 },
   saveText: { color: "white", fontWeight: "bold", fontSize: 14 },
   closeModalSection: { paddingVertical: 18, borderTopWidth: 1, borderTopColor: "#eee", alignItems: "center", justifyContent: "center", marginHorizontal: -25, marginBottom: -40, marginTop: 10 },

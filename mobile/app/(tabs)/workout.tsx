@@ -9,6 +9,7 @@ import ChooseExerciseModal from "../../components/modals/ChooseExerciseModal";
 import ExerciseMenuModal from "../../components/modals/ExerciseMenuModal";
 import ProgramsModal from "../../components/modals/ProgramsModal";
 import SaveProgramModal from "../../components/modals/SaveProgramModal";
+import Toast, { ToastRef } from "../../components/ui/Toast";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
 const width = Dimensions.get("window").width;
@@ -20,9 +21,7 @@ type WorkoutSet = { id: string; weight: string; reps: string;
 type Exercise = { id: string; name: string; muscleGroup: string;
                   sets: WorkoutSet[];
                   lastSets?: { kg: number; reps: number }[]; };
-
-type Program = { id: string; name: string; exercises: string [] };
-
+  
 // For calculating and updating the set percentage-increase, from previous session
 function TrendBadge({ set }: { set: WorkoutSet }) {
   if (set.lastKg === undefined || set.lastReps === undefined) return <View style={{ flex: 0.5 }} />;
@@ -60,9 +59,10 @@ export default function WorkoutScreen() {
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showChooseModal, setShowChooseModal] = useState(false);
-  const [programs, setPrograms] = useState<Program[]>([]);
+  const [programs, setPrograms] = useState<any[]>([]);
   const [showProgramsModal, setShowProgramsModal] = useState(false);
   const [showSaveProgramModal, setShowSaveProgramModal] = useState(false);
+  const toastRef = useRef<ToastRef>(null);
 
   // New: card action menu state
   const [menuExerciseId, setMenuExerciseId] = useState<string | null>(null);
@@ -114,12 +114,10 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
     }
 
     if (hasEmptyFields) {
-      Alert.alert(
-        "Incomplete Workout",
-        "Please fill out both weight and reps for all sets before saving."
-      );
-      return; // Stop the function here so it doesn't save
-    }
+          // Vi kalder nu vores nye Toast i stedet for Alert.alert
+          toastRef.current?.show("Please fill out both weight and reps for all sets.");
+          return; // Stop funktionen her så den ikke gemmer
+        }
 
      Alert.alert (
       "Save Workout?",
@@ -138,7 +136,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
               body: JSON.stringify({
                 name: "My Workout",
                 exercises: activeExercises.map(ex => ({
-                  exerciseId: parseInt(ex.id.split('-')[0]),
+                  exerciseId: ex.id.split('-')[0],
                   sets: ex.sets.map(s => ({
                     kg: parseFloat(s.weight.replace(',', '.')) || 0,
                     reps: parseInt(s.reps) || 0
@@ -146,13 +144,11 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
                 }))
               }),
             });
+            const text = await res.text();
+            console.log("Response", text);
             if(res.ok){
               await AsyncStorage.removeItem(sessionKey);
               setActiveExercises([]);
-            } else {
-              const text = await res.text();
-              console.error("Save workout failed", text);
-              Alert.alert("Error", "Failed to save workout. Please try again.");
             }
           } catch(err) {
             console.error("Failed to save workout", err);
@@ -247,7 +243,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
     }
   };
 
-  const addExistingExercise = async (ex: { id: string; name: string; muscleGroup: string }, skipDuplicateCheck = false) => {
+  const addExistingExercise = async (ex: { id: string; name: string; muscleGroup: string }) => {
     let sets: WorkoutSet[] = [{ id: Date.now() + "-set-0", weight: "", reps: "" }];
     let lastSets: { kg: number; reps: number }[] | undefined;
 
@@ -282,12 +278,13 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
       lastSets,
     };
       
-    if (!skipDuplicateCheck && activeExercises.some(e => e.name === newEx.name)) {
+    // Check for duplicates based on the original exercise ID (ignoring the timestamp)
+    if (activeExercises.some(e => e.name === newEx.name)) {
       Alert.alert("Duplicate Exercise", "This exercise is already in your workout.");
       return;
     }
 
-    setActiveExercises(prev => [newEx, ...prev]);
+    setActiveExercises([newEx, ...activeExercises]);
     setShowChooseModal(false);
   };
 
@@ -346,81 +343,99 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
     );
   };
 
-// Henter programmer fra databasen når skærmen åbnes
+// Henter programmer fra telefonens hukommelse når skærmen åbnes
   useEffect(() => {
-    fetchPrograms();
+    const loadSavedPrograms = async () => {
+      try {
+        const saved = await AsyncStorage.getItem(`programs_${user?.id}`);
+        if (saved) setPrograms(JSON.parse(saved));
+      } catch (err) {
+        console.error("Failed to load programs", err);
+      }
+    };
+    loadSavedPrograms();
   }, []);
-
-const fetchPrograms = async () => {
-  try {
-    const res = await fetch(`${API_BASE}/api/exercises/getPrograms`, {
-      headers: { "Authorization": `Bearer ${token}` },
-    });
-    const text = await res.text();
-    if (res.ok) setPrograms(JSON.parse(text));
-  } catch (err) {
-    console.error("Failed to fetch programs", err);
-  }
-};
 
   // Gemmer de nuværende aktive øvelser som et nyt program
   const saveCurrentAsProgram = async (programName: string) => {
-      if (activeExercises.length === 0) {
-        Alert.alert("Error", "You need to add exercises before saving a program.");
-        return;
-      }
+    if (activeExercises.length === 0) {
+      Alert.alert("Error", "You need to add exercises before saving a program.");
+      return;
+    }
 
-      try {
-        const res = await fetch(`${API_BASE}/api/exercises/saveProgram`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            name: programName,
-            exerciseIds: activeExercises.map(ex => parseInt(ex.id.split('-')[0])),
-          }),
-        });
+    const newProgram = {
+      id: Date.now().toString(),
+      name: programName,
+      // Vi gemmer øvelserne med deres struktur, så vi ved, hvor mange sæt der er
+      exercises: activeExercises.map(ex => ({
+        id: ex.id.split('-')[0], // Det originale øvelses-ID fra databasen
+        name: ex.name,
+        muscleGroup: ex.muscleGroup,
+        setsCount: ex.sets.length // Vi gemmer kun antallet af sæt
+      }))
+    };
 
-        if(res.ok) {
-          await fetchPrograms();
-          setShowSaveProgramModal(false);
-          setShowProgramsModal(true); // Gå tilbage til programoversigten
-        }
+    const updatedPrograms = [newProgram, ...programs];
+    setPrograms(updatedPrograms);
+    await AsyncStorage.setItem(`programs_${user?.id}`, JSON.stringify(updatedPrograms));
     
-      } catch (err) {
-        console.error("failed to save exericse program", err);
-      }
+    setShowSaveProgramModal(false);
+    setShowProgramsModal(true); // Gå tilbage til programoversigten
   };
 
   // Sletter et gemt program
   const deleteProgram = async (programId: string) => {
-      try {
-        const res = await fetch(`${API_BASE}/api/exercises/deleteProgram/${programId}`, {
-          method: "DELETE",
-          headers: { "Authorization": `Bearer ${token}` },
-      });
-      if (res.ok) await fetchPrograms();
-    } catch (err) {
-      console.error("Failed to delete program", err);
-    }
+    const updated = programs.filter(p => p.id !== programId);
+    setPrograms(updated);
+    await AsyncStorage.setItem(`programs_${user?.id}`, JSON.stringify(updated));
   };
 
-  // Load each exercise from the selected program by matching IDs with predefinedExercises,
-  // then add them one by one as exercisecards using addExistingExercise.
-const loadProgram = async (program: Program) => {
-  setShowProgramsModal(false);
-  setActiveExercises([]);
-  console.log("program.exercises:", program.exercises);
-  console.log("predefinedExercises:", predefinedExercises.map(e => e.id));
-  for (const exId of program.exercises) {
-    const exDetails = predefinedExercises.find(e => e.id.toString() === exId.toString());
-    console.log("exId:", exId, "exDetails:", exDetails);
-    if (exDetails) await addExistingExercise(exDetails, true);
-  }
-};
+  // Indlæser et program og henter den seneste data (lastKg og lastReps) fra API'et!
+  const loadProgram = async (program: any) => {
+    // Vi bruger Promise.all fordi vi gerne vil kalde dit API for hver øvelse i programmet
+    const loadedExercises = await Promise.all(program.exercises.map(async (ex: any, index: number) => {
+      
+      let sets = Array.from({ length: ex.setsCount || 1 }).map((_, i) => ({
+        id: `${Date.now()}-set-${index}-${i}`,
+        weight: "",
+        reps: "",
+      }));
+      let lastSets: { kg: number; reps: number }[] | undefined = undefined;
+
+      try {
+        // Vi kalder API'et præcis som i "addExistingExercise"
+        const res = await fetch(`${API_BASE}/api/exercises/getLastExerciseData/${ex.id}`, {
+          headers: { "Authorization": `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.sets?.length > 0) {
+             lastSets = data.sets.map((s: any) => ({ kg: s.kg, reps: s.reps }));
+             sets = sets.map((s, i) => ({
+               ...s,
+               lastKg: lastSets?.[i]?.kg,
+               lastReps: lastSets?.[i]?.reps
+             }));
+          }
+        }
+      } catch (err) {
+        console.error("Could not fetch last data for", ex.name);
+      }
+
+      return {
+        id: `${ex.id}-${Date.now()}-${index}`, // Unikt ID for denne træning
+        name: ex.name,
+        muscleGroup: ex.muscleGroup,
+        sets,
+        lastSets
+      };
+    }));
+
+    setActiveExercises(loadedExercises);
+    setShowProgramsModal(false);
+  };
   
+
   // --- RENDER ---
 
   const renderExerciseCard = ({ item: exercise }: { item: Exercise }) => (
@@ -495,6 +510,7 @@ const loadProgram = async (program: Program) => {
 
   return (
     <View style={styles.container}>
+      <Toast ref={toastRef} /> 
       <Text style={styles.title}>Track Workout</Text>
 
       <View style={styles.topButtonsRow}>
