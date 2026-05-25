@@ -16,9 +16,10 @@ type Props = {
 
 export default function ChooseExerciseModal({ visible, onClose, exercises, onSelect, onDelete }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
-  const filteredExercises = exercises.filter((ex) => 
-  ex.name.toLowerCase().includes(searchQuery.toLowerCase())
-);
+const filteredExercises = exercises.filter((ex) => 
+    ex.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    ex.muscleGroup.toLowerCase().includes(searchQuery.toLowerCase())
+  );
   return (
     <Modal
       visible={visible}
@@ -50,7 +51,7 @@ export default function ChooseExerciseModal({ visible, onClose, exercises, onSel
           autoCorrect={false}
         />
           <ScrollView showsVerticalScrollIndicator={false}>
-            {exercises.map((ex) => (
+            {filteredExercises.map((ex) => (
               <Pressable 
                 key={ex.id} 
                 style={({ pressed }) => [
