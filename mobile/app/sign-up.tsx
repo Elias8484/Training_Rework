@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { View, Text, TextInput, Pressable, Alert, StyleSheet } from "react-native";
 import { router } from "expo-router";
-import { addWhitelistedNativeProps } from "react-native-reanimated/lib/typescript/ConfigHelper";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
 
