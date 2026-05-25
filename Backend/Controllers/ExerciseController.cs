@@ -236,6 +236,7 @@ public class ExerciseController : ControllerBase
                 exercises = _context.ProgramEntries
                     .Where(e => e.ProgramId == p.Id)
                     .Select(e => e.ExerciseId.ToString())
+                    .ToList()
             })
             .ToListAsync();
                                                 
