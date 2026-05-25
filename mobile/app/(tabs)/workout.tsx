@@ -21,8 +21,9 @@ type WorkoutSet = { id: string; weight: string; reps: string;
 type Exercise = { id: string; name: string; muscleGroup: string;
                   sets: WorkoutSet[];
                   lastSets?: { kg: number; reps: number }[]; };
-  
-// For calculating and updating the set percentage-increase, from previous session
+
+type Program = { id: string; name: string; exercises: string[] };
+
 function TrendBadge({ set }: { set: WorkoutSet }) {
   if (set.lastKg === undefined || set.lastReps === undefined) return <View style={{ flex: 0.5 }} />;
 
@@ -52,116 +53,94 @@ export default function WorkoutScreen() {
   const sessionKey = `activeWorkout_${user?.id}`;
 
   const [activeExercises, setActiveExercises] = useState<Exercise[]>([]);
-  
-  // Array of exercise objects that starts as an empty array on first load, updated with the function
   const [predefinedExercises, setPredefinedExercises] = 
   useState<{id: string, name: string, muscleGroup: string}[]>([])
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showChooseModal, setShowChooseModal] = useState(false);
-  const [programs, setPrograms] = useState<any[]>([]);
+  const toastRef = useRef<ToastRef>(null);
+  const [programs, setPrograms] = useState<Program[]>([]);
   const [showProgramsModal, setShowProgramsModal] = useState(false);
   const [showSaveProgramModal, setShowSaveProgramModal] = useState(false);
-  const toastRef = useRef<ToastRef>(null);
-
-  // New: card action menu state
   const [menuExerciseId, setMenuExerciseId] = useState<string | null>(null);
-
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
   
-const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
-  if (viewableItems && viewableItems.length > 0) {
-    setCurrentIndex(viewableItems[0].index ?? 0);
-  }
-}).current;
+  const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    if (viewableItems && viewableItems.length > 0) {
+      setCurrentIndex(viewableItems[0].index ?? 0);
+    }
+  }).current;
 
   const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
 
-
-  // --- FUNCTIONS ---
-
-  /* Fetch all the exercises from the backend that belongs to the current user
-    and store it in predefinedExercises */
   const fetchExercises = async () => {
     try {
       const res = await fetch(`${API_BASE}/api/exercises/getExercises`, {
-        headers: {
-          "Authorization": `Bearer ${token}`
-        },
+        headers: { "Authorization": `Bearer ${token}` },
       });
       const data = await res.json();
       setPredefinedExercises(data);
-
     } catch(err){
       console.error("Failed to fetch exercises", err);
     }
   };
 
   const saveWorkoutPost = async () => {
-    
     let hasEmptyFields = false;
 
     for (const exercise of activeExercises) {
       for (const set of exercise.sets) {
-        // Check if weight or reps is empty (or just spaces)
         if (!set.weight.trim() || !set.reps.trim()) {
           hasEmptyFields = true;
-          break; // Stop checking this exercise's sets
+          break;
         }
       }
-      if (hasEmptyFields) break; // Stop checking other exercises
+      if (hasEmptyFields) break;
     }
 
     if (hasEmptyFields) {
-          // Vi kalder nu vores nye Toast i stedet for Alert.alert
-          toastRef.current?.show("Please fill out both weight and reps for all sets.");
-          return; // Stop funktionen her så den ikke gemmer
-        }
+      toastRef.current?.show("Please fill out both weight and reps for all sets.");
+      return;
+    }
 
-     Alert.alert (
-      "Save Workout?",
-      undefined,
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Save", onPress: async () => {
-
-          try {
-            const res = await fetch(`${API_BASE}/api/exercises/saveWorkout`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                name: "My Workout",
-                exercises: activeExercises.map(ex => ({
-                  exerciseId: ex.id.split('-')[0],
-                  sets: ex.sets.map(s => ({
-                    kg: parseFloat(s.weight.replace(',', '.')) || 0,
-                    reps: parseInt(s.reps) || 0
-                  }))
+    Alert.alert("Save Workout?", undefined, [
+      { text: "Cancel", style: "cancel" },
+      { text: "Save", onPress: async () => {
+        try {
+          const res = await fetch(`${API_BASE}/api/exercises/saveWorkout`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              name: "My Workout",
+              exercises: activeExercises.map(ex => ({
+                exerciseId: parseInt(ex.id.split('-')[0]),
+                sets: ex.sets.map(s => ({
+                  kg: parseFloat(s.weight.replace(',', '.')) || 0,
+                  reps: parseInt(s.reps) || 0
                 }))
-              }),
-            });
+              }))
+            }),
+          });
+          if(res.ok){
+            await AsyncStorage.removeItem(sessionKey);
+            setActiveExercises([]);
+          } else {
             const text = await res.text();
-            console.log("Response", text);
-            if(res.ok){
-              await AsyncStorage.removeItem(sessionKey);
-              setActiveExercises([]);
-            }
-          } catch(err) {
-            console.error("Failed to save workout", err);
+            console.error("Save workout failed", text);
+            Alert.alert("Error", "Failed to save workout. Please try again.");
           }
-        }}
-      ]
-    );
+        } catch(err) {
+          console.error("Failed to save workout", err);
+        }
+      }}
+    ]);
   };
 
-    // Runs fetchexercises when screen first loads
-   useEffect(() => {
-    fetchExercises();
-  }, []);
+  useEffect(() => { fetchExercises(); }, []);
 
   useEffect(() => {
     const loadSession = async () => {
@@ -198,7 +177,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
     } else {
       AsyncStorage.removeItem(sessionKey);
     }
-  } , [activeExercises]);
+  }, [activeExercises]);
 
   const createNewExercise = async (name: string, muscle: string) => {
     if (!name.trim()) return;
@@ -211,13 +190,10 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
         },
         body: JSON.stringify({ name: name, muscleGroup: muscle || "None" }),
       });
-
-       console.log("Status:", res.status);
-       const text = await res.text();
-       console.log("Response:", text);
-       const data = JSON.parse(text);
-       if (!res.ok) throw new Error(data);
-       const newEx: Exercise = {
+      const text = await res.text();
+      const data = JSON.parse(text);
+      if (!res.ok) throw new Error(data);
+      const newEx: Exercise = {
         id: data.id.toString(),
         name: data.name,
         muscleGroup: data.muscleGroup,
@@ -243,15 +219,13 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
     }
   };
 
-  const addExistingExercise = async (ex: { id: string; name: string; muscleGroup: string }) => {
+  const addExistingExercise = async (ex: { id: string; name: string; muscleGroup: string }, skipDuplicateCheck = false) => {
     let sets: WorkoutSet[] = [{ id: Date.now() + "-set-0", weight: "", reps: "" }];
     let lastSets: { kg: number; reps: number }[] | undefined;
 
-    // Get previous kg and reps from last exercises session, for the chosen exercise
     try {
       const res = await fetch(`${API_BASE}/api/exercises/getLastExerciseData/${ex.id}`, {
-        headers: {
-          "Authorization": `Bearer ${token}` },
+        headers: { "Authorization": `Bearer ${token}` },
       });
       if (res.ok){
         const data = await res.json();
@@ -266,25 +240,24 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
           lastSets = data.sets.map((s: any) => ({ kg: s.kg, reps: s.reps}));
         }
       }
-
     } catch (err) {
-      console.error("Failed to fetch indivudal exercise set data");
+      console.error("Failed to fetch individual exercise set data");
     }
-      const newEx: Exercise = {
+
+    const newEx: Exercise = {
       id: `${ex.id}-${Date.now()}`,
       name: ex.name,
       muscleGroup: ex.muscleGroup,
       sets,
       lastSets,
     };
-      
-    // Check for duplicates based on the original exercise ID (ignoring the timestamp)
-    if (activeExercises.some(e => e.name === newEx.name)) {
+
+    if (!skipDuplicateCheck && activeExercises.some(e => e.name === newEx.name)) {
       Alert.alert("Duplicate Exercise", "This exercise is already in your workout.");
       return;
     }
 
-    setActiveExercises([newEx, ...activeExercises]);
+    setActiveExercises(prev => [newEx, ...prev]);
     setShowChooseModal(false);
   };
 
@@ -306,8 +279,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
             reps: "",
             lastKg: last?.kg,
             lastReps: last?.reps,
-
-          }],   
+          }],
         };
       })
     );
@@ -329,143 +301,99 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
     setActiveExercises(
       activeExercises.map((ex) => {
         if (ex.id !== exerciseId) return ex;
-          // Filtrer det sæt fra, som har det id vi vil slette
-          // og opdater den nye rækkefølge af sets til at blive ved med at matche lastsets kg og reps 1 til 1
         const updatedSets = ex.sets
-                            .filter((s) => s.id !== setId)
-                            .map((s, i) => ({
-                              ...s,
-                              lastKg: ex.lastSets?.[i]?.kg,
-                              lastReps: ex.lastSets?.[i]?.reps,
-                            }));
+          .filter((s) => s.id !== setId)
+          .map((s, i) => ({
+            ...s,
+            lastKg: ex.lastSets?.[i]?.kg,
+            lastReps: ex.lastSets?.[i]?.reps,
+          }));
         return { ...ex, sets: updatedSets };
       })
     );
   };
 
-// Henter programmer fra telefonens hukommelse når skærmen åbnes
-  useEffect(() => {
-    const loadSavedPrograms = async () => {
-      try {
-        const saved = await AsyncStorage.getItem(`programs_${user?.id}`);
-        if (saved) setPrograms(JSON.parse(saved));
-      } catch (err) {
-        console.error("Failed to load programs", err);
-      }
-    };
-    loadSavedPrograms();
-  }, []);
+  useEffect(() => { fetchPrograms(); }, []);
 
-  // Gemmer de nuværende aktive øvelser som et nyt program
+  const fetchPrograms = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/exercises/getPrograms`, {
+        headers: { "Authorization": `Bearer ${token}` },
+      });
+      if (res.ok) setPrograms(await res.json());
+    } catch (err) {
+      console.error("Failed to fetch programs", err);
+    }
+  };
+
   const saveCurrentAsProgram = async (programName: string) => {
     if (activeExercises.length === 0) {
       Alert.alert("Error", "You need to add exercises before saving a program.");
       return;
     }
-
-    const newProgram = {
-      id: Date.now().toString(),
-      name: programName,
-      // Vi gemmer øvelserne med deres struktur, så vi ved, hvor mange sæt der er
-      exercises: activeExercises.map(ex => ({
-        id: ex.id.split('-')[0], // Det originale øvelses-ID fra databasen
-        name: ex.name,
-        muscleGroup: ex.muscleGroup,
-        setsCount: ex.sets.length // Vi gemmer kun antallet af sæt
-      }))
-    };
-
-    const updatedPrograms = [newProgram, ...programs];
-    setPrograms(updatedPrograms);
-    await AsyncStorage.setItem(`programs_${user?.id}`, JSON.stringify(updatedPrograms));
-    
-    setShowSaveProgramModal(false);
-    setShowProgramsModal(true); // Gå tilbage til programoversigten
-  };
-
-  // Sletter et gemt program
-  const deleteProgram = async (programId: string) => {
-    const updated = programs.filter(p => p.id !== programId);
-    setPrograms(updated);
-    await AsyncStorage.setItem(`programs_${user?.id}`, JSON.stringify(updated));
-  };
-
-  // Indlæser et program og henter den seneste data (lastKg og lastReps) fra API'et!
-  const loadProgram = async (program: any) => {
-    // Vi bruger Promise.all fordi vi gerne vil kalde dit API for hver øvelse i programmet
-    const loadedExercises = await Promise.all(program.exercises.map(async (ex: any, index: number) => {
-      
-      let sets = Array.from({ length: ex.setsCount || 1 }).map((_, i) => ({
-        id: `${Date.now()}-set-${index}-${i}`,
-        weight: "",
-        reps: "",
-      }));
-      let lastSets: { kg: number; reps: number }[] | undefined = undefined;
-
-      try {
-        // Vi kalder API'et præcis som i "addExistingExercise"
-        const res = await fetch(`${API_BASE}/api/exercises/getLastExerciseData/${ex.id}`, {
-          headers: { "Authorization": `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.sets?.length > 0) {
-             lastSets = data.sets.map((s: any) => ({ kg: s.kg, reps: s.reps }));
-             sets = sets.map((s, i) => ({
-               ...s,
-               lastKg: lastSets?.[i]?.kg,
-               lastReps: lastSets?.[i]?.reps
-             }));
-          }
-        }
-      } catch (err) {
-        console.error("Could not fetch last data for", ex.name);
+    try {
+      const res = await fetch(`${API_BASE}/api/exercises/saveProgram`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: programName,
+          exerciseIds: activeExercises.map(ex => parseInt(ex.id.split('-')[0])),
+        }),
+      });
+      if(res.ok) {
+        await fetchPrograms();
+        setShowSaveProgramModal(false);
+        setShowProgramsModal(true);
       }
-
-      return {
-        id: `${ex.id}-${Date.now()}-${index}`, // Unikt ID for denne træning
-        name: ex.name,
-        muscleGroup: ex.muscleGroup,
-        sets,
-        lastSets
-      };
-    }));
-
-    setActiveExercises(loadedExercises);
-    setShowProgramsModal(false);
+    } catch (err) {
+      console.error("Failed to save exercise program", err);
+    }
   };
-  
 
-  // --- RENDER ---
+  const deleteProgram = async (programId: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/exercises/deleteProgram/${programId}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` },
+      });
+      if (res.ok) await fetchPrograms();
+    } catch (err) {
+      console.error("Failed to delete program", err);
+    }
+  };
+
+  // Load each exercise from the selected program by matching IDs with predefinedExercises,
+  // then add them one by one as exercise cards using addExistingExercise.
+  const loadProgram = async (program: Program) => {
+    setShowProgramsModal(false);
+    setActiveExercises([]);
+    for (const exId of program.exercises) {
+      const exDetails = predefinedExercises.find(e => e.id.toString() === exId.toString());
+      if (exDetails) await addExistingExercise(exDetails, true);
+    }
+  };
 
   const renderExerciseCard = ({ item: exercise }: { item: Exercise }) => (
     <View style={styles.cardContainer}>
       <View style={styles.exerciseCard}>
-      <View style={styles.cardHeader}>
-        <View style={styles.cardHeaderText}>
-          <Text style={styles.exerciseName}>{exercise.name}</Text>
-          <Text style={styles.muscleGroup}>{exercise.muscleGroup}</Text>
+        <View style={styles.cardHeader}>
+          <View style={styles.cardHeaderText}>
+            <Text style={styles.exerciseName}>{exercise.name}</Text>
+            <Text style={styles.muscleGroup}>{exercise.muscleGroup}</Text>
+          </View>
+          <Pressable style={styles.menuButton} onPress={() => setMenuExerciseId(exercise.id)} hitSlop={10}>
+            <Text style={styles.menuDots}>⋮</Text>
+          </Pressable>
         </View>
-        {/* Three-dot menu button */}
-        <Pressable
-          style={styles.menuButton}
-          onPress={() => setMenuExerciseId(exercise.id)}
-          hitSlop={10}
-        >
-          <Text style={styles.menuDots}>⋮</Text>
-        </Pressable>
-      </View>
 
         <View style={styles.setHeader}>
-          {/* Flex 0.5 og venstrestillet for at matche setIndex */}
           <Text style={[styles.headerText, { flex: 0.5, textAlign: "left" }]}>Set</Text>
-          
-          {/* Flex 1, centreret og marginHorizontal: 5 for at matche numberInput præcist */}
           <Text style={[styles.headerText, { flex: 0.5, textAlign: "center", marginLeft: 12 }]}>kg</Text>
           <Text style={[styles.headerText, { flex: 1, textAlign: "center", marginLeft: 30 }]}>Reps</Text>
-          
-          {/* De to tomme pladser til TrendBadge og slette-knappen */}
-          <View style={{ flex: 0.5 }} /> 
+          <View style={{ flex: 0.5 }} />
           <View style={{ flex: 0.5 }} />
         </View>
         <ScrollView showsVerticalScrollIndicator={false}>
@@ -488,18 +416,12 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
                 value={set.reps}
                 onChangeText={(val) => updateSet(exercise.id, set.id, "reps", val)}
               />
-              
               <TrendBadge set={set} />
-              <Pressable 
-                style={styles.removeSetButton} 
-                onPress={() => removeSet(exercise.id, set.id)}
-              >
+              <Pressable style={styles.removeSetButton} onPress={() => removeSet(exercise.id, set.id)}>
                 <Text style={styles.removeSetText}>×</Text>
               </Pressable>
-
             </View>
           ))}
-
           <Pressable style={styles.addSetButton} onPress={() => addSet(exercise.id)}>
             <Text style={styles.addSetText}>+</Text>
           </Pressable>
@@ -510,7 +432,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
 
   return (
     <View style={styles.container}>
-      <Toast ref={toastRef} /> 
+      <Toast ref={toastRef} />
       <Text style={styles.title}>Track Workout</Text>
 
       <View style={styles.topButtonsRow}>
@@ -548,26 +470,24 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
           style={styles.swipeList}
         />
       )}
-      
+
       {activeExercises.length > 0 && (
         <Paginator data={activeExercises} scrollX={scrollX} />
       )}
 
       {activeExercises.length > 0 && (
         <View style={styles.fixedFooter}>
-          <Pressable style={styles.saveWorkoutButton} onPress={() => { 
+          <Pressable style={styles.saveWorkoutButton} onPress={() => {
             if (Platform.OS === "ios") {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); 
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             } else if (Platform.OS === "android") {
-            Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Confirm); // Trigger a light, precise tap from Pulsar on Android
+              Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Confirm);
             }
-            saveWorkoutPost();}}>
+            saveWorkoutPost();
+          }}>
             <Text style={styles.saveWorkoutText}>Save Workout</Text>
           </Pressable>
-          <Pressable 
-            style={styles.saveAsProgramButton} 
-            onPress={() => setShowSaveProgramModal(true)}
-          >
+          <Pressable style={styles.saveAsProgramButton} onPress={() => setShowSaveProgramModal(true)}>
             <Text style={styles.saveAsProgramText}>Save as Program</Text>
           </Pressable>
         </View>
@@ -578,7 +498,6 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
         onClose={() => setShowCreateModal(false)}
         onSave={createNewExercise}
       />
-
       <ChooseExerciseModal
         visible={showChooseModal}
         onClose={() => setShowChooseModal(false)}
@@ -586,13 +505,11 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
         onSelect={addExistingExercise}
         onDelete={deleteExercise}
       />
-
       <ExerciseMenuModal
         visible={menuExerciseId !== null}
         onClose={() => setMenuExerciseId(null)}
         onRemove={() => menuExerciseId && removeExercise(menuExerciseId)}
       />
-
       <ProgramsModal
         visible={showProgramsModal}
         onClose={() => setShowProgramsModal(false)}
@@ -600,7 +517,6 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
         onSelect={loadProgram}
         onDelete={deleteProgram}
       />
-
       <SaveProgramModal
         visible={showSaveProgramModal}
         onClose={() => setShowSaveProgramModal(false)}
@@ -614,42 +530,34 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f8f9fa", paddingTop: 30 },
   title: { fontSize: 28, fontWeight: "800", marginBottom: 15, color: "black", paddingHorizontal: 20 },
-
   topButtonsRow: { flexDirection: "row", gap: 10, paddingHorizontal: 20, marginBottom: 20 },
   programButton: { flex: 2, backgroundColor: "#000", padding: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   primaryButton: { flex: 2, backgroundColor: "#000", padding: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   buttonText: { color: "white", fontWeight: "600", fontSize: 16 },
   createIconButton: { flex: 1, backgroundColor: "#4CAF50", padding: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   createIconText: { color: "white", fontWeight: "bold", fontSize: 24, lineHeight: 24 },
-
   fixedFooter: { paddingHorizontal: 50, paddingBottom: 12, backgroundColor: "#f8f9fa" },
   saveWorkoutButton: { backgroundColor: "#000", paddingVertical: 12, borderRadius: 16, alignItems: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 5, elevation: 4 },
   saveWorkoutText: { color: "white", fontSize: 16, fontWeight: "bold" },
-  
   saveAsProgramButton: { backgroundColor: "#e0e0e0", paddingVertical: 10, borderRadius: 16, alignItems: "center", marginTop: 10, shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 5, elevation: 4 },
   saveAsProgramText: { color: "black", fontSize: 14, fontWeight: "600" },
-
   emptyState: { flex: 1, justifyContent: "center", alignItems: "center" },
   emptyText: { color: "#888", fontSize: 16 },
-
   swipeList: { flex: 1 },
   cardContainer: { width: width, paddingHorizontal: 20, paddingBottom: 20, paddingTop: 5 },
   exerciseCard: { backgroundColor: "white", padding: 20, borderRadius: 16, flex: 1, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 8, elevation: 5 },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", paddingBottom: 10 },
-  cardHeaderText: { flex: 1, },
+  cardHeaderText: { flex: 1 },
   exerciseName: { fontSize: 20, fontWeight: "bold", color: "black" },
   muscleGroup: { fontSize: 12, color: "#888", marginTop: 4, textTransform: "uppercase", letterSpacing: 1 },
-
-  // Three-dot button
   menuButton: { padding: 4 },
   menuDots: { fontSize: 24, color: "#888", fontWeight: "bold", lineHeight: 24 },
-
   setHeader: { flexDirection: "row", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#f0f0f0", marginBottom: 10 },
   headerText: { flex: 1, fontWeight: "700", color: "#888", textAlign: "left", fontSize: 12, textTransform: "uppercase" },
   setRow: { flexDirection: "row", alignItems: "center", marginBottom: 8, paddingVertical: 4 },
   setIndex: { flex: 0.3, textAlign: "left", fontSize: 16, fontWeight: "600", color: "#333" },
   numberInput: { flex: 0.7, backgroundColor: "#f0f0f0", borderRadius: 8, padding: 12, marginHorizontal: 5, textAlign: "center", fontSize: 16, fontWeight: "500" },
-  removeSetButton: { flex: 0.4, alignItems: "center", justifyContent: "flex-end",},
+  removeSetButton: { flex: 0.4, alignItems: "center", justifyContent: "flex-end" },
   removeSetText: { color: "grey", fontSize: 20, fontWeight: "300" },
   addSetButton: { width: "50%", marginTop: 1, paddingVertical: 10, backgroundColor: "#f0f8ff", borderRadius: 8, marginHorizontal: 50, alignSelf: "flex-start" },
   addSetText: { color: "#007AFF", fontWeight: "600", textAlign: "center", fontSize: 16 },
