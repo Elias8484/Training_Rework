@@ -138,7 +138,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
               body: JSON.stringify({
                 name: "My Workout",
                 exercises: activeExercises.map(ex => ({
-                  exerciseId: ex.id.split('-')[0],
+                  exerciseId: parseInt(ex.id.split('-')[0]),
                   sets: ex.sets.map(s => ({
                     kg: parseFloat(s.weight.replace(',', '.')) || 0,
                     reps: parseInt(s.reps) || 0
@@ -146,11 +146,13 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
                 }))
               }),
             });
-            const text = await res.text();
-            console.log("Response", text);
             if(res.ok){
               await AsyncStorage.removeItem(sessionKey);
               setActiveExercises([]);
+            } else {
+              const text = await res.text();
+              console.error("Save workout failed", text);
+              Alert.alert("Error", "Failed to save workout. Please try again.");
             }
           } catch(err) {
             console.error("Failed to save workout", err);
@@ -245,7 +247,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
     }
   };
 
-  const addExistingExercise = async (ex: { id: string; name: string; muscleGroup: string }) => {
+  const addExistingExercise = async (ex: { id: string; name: string; muscleGroup: string }, skipDuplicateCheck = false) => {
     let sets: WorkoutSet[] = [{ id: Date.now() + "-set-0", weight: "", reps: "" }];
     let lastSets: { kg: number; reps: number }[] | undefined;
 
@@ -280,13 +282,12 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
       lastSets,
     };
       
-    // Check for duplicates based on the original exercise ID (ignoring the timestamp)
-    if (activeExercises.some(e => e.name === newEx.name)) {
+    if (!skipDuplicateCheck && activeExercises.some(e => e.name === newEx.name)) {
       Alert.alert("Duplicate Exercise", "This exercise is already in your workout.");
       return;
     }
 
-    setActiveExercises([newEx, ...activeExercises]);
+    setActiveExercises(prev => [newEx, ...prev]);
     setShowChooseModal(false);
   };
 
@@ -350,16 +351,17 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
     fetchPrograms();
   }, []);
 
-  const fetchPrograms = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/exercises/getPrograms`, {
-          headers: { "Authorization": `Bearer ${token}` },
-      });
-      if (res.ok) setPrograms(await res.json());
-    } catch (err) {
-      console.error("Failed to fetch programs", err);
-    }
-  } ;
+const fetchPrograms = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/api/exercises/getPrograms`, {
+      headers: { "Authorization": `Bearer ${token}` },
+    });
+    const text = await res.text();
+    if (res.ok) setPrograms(JSON.parse(text));
+  } catch (err) {
+    console.error("Failed to fetch programs", err);
+  }
+};
 
   // Gemmer de nuværende aktive øvelser som et nyt program
   const saveCurrentAsProgram = async (programName: string) => {
@@ -377,9 +379,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
           },
           body: JSON.stringify({
             name: programName,
-            exerciseIds: activeExercises.map(ex => ({
-              id: ex.id.split('-')[0],
-            })),
+            exerciseIds: activeExercises.map(ex => parseInt(ex.id.split('-')[0])),
           }),
         });
 
@@ -397,7 +397,7 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
   // Sletter et gemt program
   const deleteProgram = async (programId: string) => {
       try {
-        const res = await fetch(`${API_BASE}/api/programs/deleteProgram/${programId}`, {
+        const res = await fetch(`${API_BASE}/api/exercises/deleteProgram/${programId}`, {
           method: "DELETE",
           headers: { "Authorization": `Bearer ${token}` },
       });
@@ -412,13 +412,15 @@ const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewTok
 const loadProgram = async (program: Program) => {
   setShowProgramsModal(false);
   setActiveExercises([]);
+  console.log("program.exercises:", program.exercises);
+  console.log("predefinedExercises:", predefinedExercises.map(e => e.id));
   for (const exId of program.exercises) {
-     const exDetails = predefinedExercises.find(e => e.id === exId);
-      if (exDetails) await addExistingExercise(exDetails);
+    const exDetails = predefinedExercises.find(e => e.id.toString() === exId.toString());
+    console.log("exId:", exId, "exDetails:", exDetails);
+    if (exDetails) await addExistingExercise(exDetails, true);
   }
 };
   
-
   // --- RENDER ---
 
   const renderExerciseCard = ({ item: exercise }: { item: Exercise }) => (

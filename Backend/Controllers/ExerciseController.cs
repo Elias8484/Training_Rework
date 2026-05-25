@@ -243,5 +243,34 @@ public class ExerciseController : ControllerBase
         return Ok(programs);
         
     }
+
+    [HttpDelete("deleteProgram/{programId}")]
+    public async Task<IActionResult> DeleteProgram(long programId) {
+        Console.WriteLine($"Deleting exercise id: {programId}");
+        try{
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            // Delete program that match the programId and user from the request
+            
+            var program = await _context.Programs.FirstOrDefaultAsync(p => p.Id == programId && p.UserId == userId);
+            if (program == null) return NotFound();
+
+             // Delete all entries belonging to the program first
+            _context.ProgramEntries.RemoveRange(
+                _context.ProgramEntries.Where(e => e.ProgramId == programId)
+            );
+            
+            // Then delete Program
+            _context.Programs.Remove(program);
+                await _context.SaveChangesAsync();
+
+             return Ok();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Insert Error: {ex.Message}");
+            return BadRequest(ex.Message);  
+        }
+    }
    
 }
