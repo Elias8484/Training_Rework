@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, View, Pressable, Dimensions, Modal } from "react-native";
+import { StyleSheet, View, Pressable, Dimensions, Modal, KeyboardAvoidingView, Platform } from "react-native";
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -50,8 +50,11 @@ useEffect(() => {
   return (
     // Bemærk: animationType er "none", fordi vi styrer animationen selv nu!
     <Modal visible={true} transparent={true} animationType="none" onRequestClose={onClose}>
-      <View style={styles.overlayContainer}>
-        {/* Den mørke baggrund der fader ind */}
+      
+      <KeyboardAvoidingView 
+      style={styles.overlayContainer}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        
         <Animated.View style={[styles.backdrop, overlayStyle]}>
           <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         </Animated.View>
@@ -60,7 +63,7 @@ useEffect(() => {
         <Animated.View style={[styles.bottomSheet, sheetStyle]}>
           {children}
         </Animated.View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
