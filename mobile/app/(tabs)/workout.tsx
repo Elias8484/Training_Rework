@@ -346,7 +346,9 @@ export default function WorkoutScreen() {
       if(res.ok) {
         await fetchPrograms();
         setShowSaveProgramModal(false);
-        setShowProgramsModal(true);
+        toastRef.current?.show("Program saved!");
+      } else {
+        toastRef.current?.show("Failed to save program.");
       }
     } catch (err) {
       console.error("Failed to save exercise program", err);
