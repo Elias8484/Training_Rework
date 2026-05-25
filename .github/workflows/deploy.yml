@@ -16,6 +16,7 @@ jobs:
       - name: Apply migrations
         run: |
           export PATH="$PATH:/home/eliaspi123/.dotnet/tools"
+          export DOTNET_ROOT=/usr/share/dotnet
           cd Backend
           dotnet ef database update
       - name: Restart backend
