@@ -6,7 +6,7 @@ jobs:
   deploy-backend:
     runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Clean old publish
         run: rm -rf /home/eliaspi123/project/Backend/out
       - name: Publish backend
@@ -15,6 +15,7 @@ jobs:
           dotnet publish -c Release -r linux-arm64 --self-contained false -o /home/eliaspi123/project/Backend/out
       - name: Apply migrations
         run: |
+          export PATH="$PATH:/home/eliaspi123/.dotnet/tools"
           cd Backend
           dotnet ef database update
       - name: Restart backend
