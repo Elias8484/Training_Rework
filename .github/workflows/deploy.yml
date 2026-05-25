@@ -15,8 +15,8 @@ jobs:
           dotnet publish -c Release -r linux-arm64 --self-contained false -o /home/eliaspi123/project/Backend/out
       - name: Apply migrations
         run: |
-          export PATH="$PATH:/home/eliaspi123/.dotnet/tools"
-          export DOTNET_ROOT=/usr/share/dotnet
+          export PATH="$PATH:/home/eliaspi123/.dotnet/tools:/home/eliaspi123/.dotnet"
+          export DOTNET_ROOT=/home/eliaspi123/.dotnet
           cd Backend
           dotnet ef database update
       - name: Restart backend
