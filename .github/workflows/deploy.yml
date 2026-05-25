@@ -17,6 +17,7 @@ jobs:
         run: |
           export PATH="$PATH:/home/eliaspi123/.dotnet/tools:/home/eliaspi123/.dotnet"
           export DOTNET_ROOT=/home/eliaspi123/.dotnet
+          export ConnectionStrings__DefaultConnection="${{ secrets.DB_CONNECTION_STRING }}"
           cd Backend
           dotnet ef database update
       - name: Restart backend
