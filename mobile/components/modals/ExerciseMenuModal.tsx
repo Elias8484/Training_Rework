@@ -35,5 +35,5 @@ const styles = StyleSheet.create({
   actionButton: { paddingVertical: 18, borderTopWidth: 1, borderTopColor: "#eee", alignItems: "center", justifyContent: "center", marginHorizontal: -25 },
   menuActionDestructive: { fontSize: 16, color: "#e53935", fontWeight: "600" },
   closeModalSection: { paddingVertical: 18, borderTopWidth: 1, borderTopColor: "#eee", alignItems: "center", justifyContent: "center", marginHorizontal: -25, marginBottom: -40 },
-  cancelTextCentered: { color: "black", fontSize: 16, fontWeight: "600" },
+  cancelTextCentered: { color: "#000000ad", fontSize: 16, fontWeight: "600" },
 });

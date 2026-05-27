@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   saveButton: { backgroundColor: "#000", paddingVertical: 12, borderRadius: 16, alignItems: "center", marginBottom: 5, marginHorizontal: 25 },
   saveText: { color: "white", fontWeight: "bold", fontSize: 14 },
   closeModalSection: { paddingVertical: 18, borderTopWidth: 1, borderTopColor: "#eee", alignItems: "center", justifyContent: "center", marginHorizontal: -25, marginBottom: -40, marginTop: 10 },
-  cancelTextCentered: { color: "black", fontSize: 16, fontWeight: "600" },
+  cancelTextCentered: { color: "#000000ad", fontSize: 16, fontWeight: "600" },
   workoutList: { backgroundColor: "#f5f5f5", borderRadius: 10, padding: 12, marginBottom: 20 },
   workoutListLabel: { fontSize: 12, fontWeight: "600", color: "#888", marginBottom: 6, textTransform: "uppercase" },
   workoutItem: { fontSize: 15, color: "#222", paddingVertical: 2 },

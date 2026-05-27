@@ -104,6 +104,6 @@ const styles = StyleSheet.create({
   deleteButton: { padding: 5, justifyContent: "center", alignItems: "center" },
   deleteButtonText: { color: "lightgrey", fontSize: 26, fontWeight: "400", lineHeight: 26 },
 
-  closeModalSection: { paddingVertical: 18, borderTopWidth: 1, borderTopColor: "#eee", alignItems: "center", justifyContent: "center", borderBottomLeftRadius: 16, borderBottomRightRadius: 16 },
-  cancelTextCentered: { color: "black", fontSize: 16, fontWeight: "600" },
+  closeModalSection: { paddingVertical: 12, borderTopWidth: 1, borderTopColor: "#eee", alignItems: "center", justifyContent: "center", borderBottomLeftRadius: 16, borderBottomRightRadius: 16 },
+  cancelTextCentered: { color: "#000000ad", fontSize: 16, fontWeight: "600" },
 });

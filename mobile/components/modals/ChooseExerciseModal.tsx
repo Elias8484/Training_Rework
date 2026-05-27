@@ -101,9 +101,9 @@ const filteredExercises = exercises.filter((ex) =>
 const styles = StyleSheet.create({
   centeredOverlay: { flex: 1, backgroundColor: "rgba(0, 0, 0, 0.6)", justifyContent: "center", paddingHorizontal: 20 },
   
-  modalContent: { backgroundColor: "white", paddingTop: 20, height: SCREEN_HEIGHT * 0.50, borderRadius: 16 },
-  modalTitleRow: { flexDirection: "row", gap: 10, marginBottom: 10, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: "#f0f0f0", paddingBottom: 10 },
-  modalTitleButton: { flex: 1, backgroundColor: "#f0f0f0", paddingVertical: 12, borderRadius: 10, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 8, elevation: 5 },
+  modalContent: { backgroundColor: "white", paddingTop: 14, height: SCREEN_HEIGHT * 0.50, borderRadius: 16, },
+  modalTitleRow: { flexDirection: "row", gap: 10, marginBottom: 10, paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: "#f0f0f0", paddingBottom: 10 },
+  modalTitleButton: { flex: 1, backgroundColor: "#f0f0f0", paddingVertical: 2, borderRadius: 10, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 8, elevation: 5 },
   modalTitle2: { fontSize: 14, fontWeight: "bold", color: "black" },
   
   existingExerciseRow: { 
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   deleteButton: { padding: 5, justifyContent: "center", alignItems: "center" },
   deleteButtonText: { color: "lightgrey", fontSize: 26, fontWeight: "400", lineHeight: 26 },
 
-  closeModalSection: { paddingVertical: 18, borderTopWidth: 1, borderTopColor: "#eee", alignItems: "center", justifyContent: "center", borderBottomLeftRadius: 16, borderBottomRightRadius: 16 },
+  closeModalSection: { paddingVertical: 12, borderTopWidth: 1, borderTopColor: "#eee", alignItems: "center", justifyContent: "center", borderBottomLeftRadius: 16, borderBottomRightRadius: 16 },
   cancelTextCentered: { color: "black", fontSize: 16, fontWeight: "600" },
 
   searchInput: {
@@ -135,6 +135,6 @@ const styles = StyleSheet.create({
   marginBottom: 8,
   borderWidth: 1,
   borderColor: "lightgrey",
-  shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 8, elevation: 5
+  shadowColor: "#000000ad", shadowOpacity: 0.1, shadowRadius: 8, elevation: 5
 },
 });

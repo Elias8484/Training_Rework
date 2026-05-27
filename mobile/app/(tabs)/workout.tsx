@@ -64,6 +64,8 @@ export default function WorkoutScreen() {
   const [showSaveProgramModal, setShowSaveProgramModal] = useState(false);
   const [menuExerciseId, setMenuExerciseId] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [emptyFields, setEmptyFields] = useState<string[]>([]);
+  const flatListRef = useRef<FlatList>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
   
   const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
@@ -86,22 +88,34 @@ export default function WorkoutScreen() {
     }
   };
 
-  const saveWorkoutPost = async () => {
-    let hasEmptyFields = false;
+const saveWorkoutPost = async () => {
+    let newEmptyFields: string[] = [];
+    let firstErrorIndex = -1;
 
-    for (const exercise of activeExercises) {
-      for (const set of exercise.sets) {
-        if (!set.weight.trim() || !set.reps.trim()) {
-          hasEmptyFields = true;
-          break;
+    // Gennemgå alle øvelser og sæt for at finde tomme felter
+    activeExercises.forEach((exercise, exIndex) => {
+      exercise.sets.forEach((set) => {
+        if (!set.weight.trim()) {
+          newEmptyFields.push(`${exercise.id}-${set.id}-weight`);
+          if (firstErrorIndex === -1) firstErrorIndex = exIndex;
         }
-      }
-      if (hasEmptyFields) break;
-    }
+        if (!set.reps.trim()) {
+          newEmptyFields.push(`${exercise.id}-${set.id}-reps`);
+          if (firstErrorIndex === -1) firstErrorIndex = exIndex;
+        }
+      });
+    });
 
-    if (hasEmptyFields) {
+    // Hvis vi fandt tomme felter, afbryder vi og viser fejl
+    if (newEmptyFields.length > 0) {
+      setEmptyFields(newEmptyFields); // Gør felterne røde
       toastRef.current?.show("Please fill out both weight and reps for all sets.");
-      return;
+
+      // Scroll hen til det første kort med et tomt felt
+      if (firstErrorIndex !== -1 && flatListRef.current) {
+        flatListRef.current.scrollToIndex({ index: firstErrorIndex, animated: true });
+      }
+      return; 
     }
 
     Alert.alert("Save Workout?", undefined, [
@@ -285,7 +299,10 @@ export default function WorkoutScreen() {
     );
   };
 
-  const updateSet = (exerciseId: string, setId: string, field: "weight" | "reps", value: string) => {
+const updateSet = (exerciseId: string, setId: string, field: "weight" | "reps", value: string) => {
+    // Fjern dette felt fra "tomme felter" listen
+    setEmptyFields((prev) => prev.filter((id) => id !== `${exerciseId}-${setId}-${field}`));
+
     setActiveExercises(
       activeExercises.map((ex) => {
         if (ex.id === exerciseId) {
@@ -402,8 +419,11 @@ export default function WorkoutScreen() {
           {exercise.sets.map((set, index) => (
             <View key={set.id} style={styles.setRow}>
               <Text style={styles.setIndex}>{index + 1}</Text>
-              <TextInput
-                style={styles.numberInput}
+                <TextInput
+                style={[
+                  styles.numberInput,
+                  emptyFields.includes(`${exercise.id}-${set.id}-weight`) && styles.errorBorder
+                ]}
                 placeholder={set.lastKg !== undefined ? String(set.lastKg) : "0"}
                 placeholderTextColor="#ddd"
                 keyboardType="numeric"
@@ -411,7 +431,10 @@ export default function WorkoutScreen() {
                 onChangeText={(val) => updateSet(exercise.id, set.id, "weight", val)}
               />
               <TextInput
-                style={styles.numberInput}
+                style={[
+                  styles.numberInput,
+                  emptyFields.includes(`${exercise.id}-${set.id}-reps`) && styles.errorBorder
+                ]}
                 placeholder={set.lastReps !== undefined ? String(set.lastReps) : "0"}
                 placeholderTextColor="#ddd"
                 keyboardType="numeric"
@@ -455,6 +478,8 @@ export default function WorkoutScreen() {
         </View>
       ) : (
         <FlatList
+          ref={flatListRef}
+          getItemLayout={(data, index) => ({ length: width, offset: width * index, index })}
           data={activeExercises}
           renderItem={renderExerciseCard}
           keyExtractor={(item) => item.id}
@@ -563,4 +588,5 @@ const styles = StyleSheet.create({
   removeSetText: { color: "grey", fontSize: 20, fontWeight: "300" },
   addSetButton: { width: "50%", marginTop: 1, paddingVertical: 10, backgroundColor: "#f0f8ff", borderRadius: 8, marginHorizontal: 50, alignSelf: "flex-start" },
   addSetText: { color: "#007AFF", fontWeight: "600", textAlign: "center", fontSize: 16 },
+  errorBorder: {borderWidth: 1, borderColor: "#ff19006f", }
 });

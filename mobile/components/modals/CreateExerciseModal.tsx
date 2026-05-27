@@ -89,5 +89,5 @@ const styles = StyleSheet.create({
   saveButton: { backgroundColor: "#000", paddingVertical: 12, borderRadius: 16, alignItems: "center", marginBottom: 5, marginHorizontal: 25 },
   saveText: { color: "white", fontWeight: "bold", fontSize: 14 },
   closeModalSection: { padding: 18 ,borderTopWidth: 1, borderBottomWidth: 1, borderColor: "#eee", alignItems: "center", justifyContent: "center", marginHorizontal: -25, marginBottom: -40, marginTop: 5 },
-  cancelTextCentered: { color: "black", fontSize: 16, fontWeight: "600" },
+  cancelTextCentered: { color: "#000000ad", fontSize: 16, fontWeight: "600" },
 });
