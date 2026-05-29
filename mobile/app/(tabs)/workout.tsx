@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import {StyleSheet, Text, View, Pressable, TextInput, FlatList, Dimensions, ScrollView, Alert, Animated, ViewToken, Platform } from "react-native";
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useAuth } from "../../context/auth";
 import Paginator from "../../components/Paginator";
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,6 +10,7 @@ import ChooseExerciseModal from "../../components/modals/ChooseExerciseModal";
 import ExerciseMenuModal from "../../components/modals/ExerciseMenuModal";
 import ProgramsModal from "../../components/modals/ProgramsModal";
 import SaveProgramModal from "../../components/modals/SaveProgramModal";
+import DiscardWorkoutModal from "../../components/modals/DiscardWorkoutModal";
 import Toast, { ToastRef } from "../../components/ui/Toast";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
@@ -62,6 +64,7 @@ export default function WorkoutScreen() {
   const [programs, setPrograms] = useState<Program[]>([]);
   const [showProgramsModal, setShowProgramsModal] = useState(false);
   const [showSaveProgramModal, setShowSaveProgramModal] = useState(false);
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
   const [menuExerciseId, setMenuExerciseId] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [emptyFields, setEmptyFields] = useState<string[]>([]);
@@ -425,7 +428,7 @@ const updateSet = (exerciseId: string, setId: string, field: "weight" | "reps", 
                   emptyFields.includes(`${exercise.id}-${set.id}-weight`) && styles.errorBorder
                 ]}
                 placeholder={set.lastKg !== undefined ? String(set.lastKg) : "0"}
-                placeholderTextColor="#ddd"
+                placeholderTextColor="grey"
                 keyboardType="numeric"
                 value={set.weight}
                 onChangeText={(val) => updateSet(exercise.id, set.id, "weight", val)}
@@ -436,7 +439,7 @@ const updateSet = (exerciseId: string, setId: string, field: "weight" | "reps", 
                   emptyFields.includes(`${exercise.id}-${set.id}-reps`) && styles.errorBorder
                 ]}
                 placeholder={set.lastReps !== undefined ? String(set.lastReps) : "0"}
-                placeholderTextColor="#ddd"
+                placeholderTextColor="grey"
                 keyboardType="numeric"
                 value={set.reps}
                 onChangeText={(val) => updateSet(exercise.id, set.id, "reps", val)}
@@ -458,8 +461,6 @@ const updateSet = (exerciseId: string, setId: string, field: "weight" | "reps", 
   return (
     <View style={styles.container}>
       <Toast ref={toastRef} />
-      <Text style={styles.title}>Track Workout</Text>
-
       <View style={styles.topButtonsRow}>
         <Pressable style={styles.primaryButton} onPress={() => setShowChooseModal(true)}>
           <Text style={styles.buttonText}>Exercises</Text>
@@ -514,9 +515,14 @@ const updateSet = (exerciseId: string, setId: string, field: "weight" | "reps", 
           }}>
             <Text style={styles.saveWorkoutText}>Save Workout</Text>
           </Pressable>
-          <Pressable style={styles.saveAsProgramButton} onPress={() => setShowSaveProgramModal(true)}>
-            <Text style={styles.saveAsProgramText}>Save as Program</Text>
-          </Pressable>
+          <View style={styles.dualButtonContainer}>
+            <Pressable style={styles.saveAsProgramButton} onPress={() => setShowSaveProgramModal(true)}>
+              <Text style={styles.saveAsProgramText}>Save as Program</Text>
+            </Pressable>
+            <Pressable style={styles.discardWorkoutButton} onPress={() => setShowDiscardModal(true)}>
+              <FontAwesome name="trash-o" size={20} color="white" />
+            </Pressable>
+          </View>
         </View>
       )}
 
@@ -550,13 +556,21 @@ const updateSet = (exerciseId: string, setId: string, field: "weight" | "reps", 
         onSave={saveCurrentAsProgram}
         workoutNames={activeExercises.map(ex => ex.name)}
       />
+      <DiscardWorkoutModal
+        visible={showDiscardModal}
+        onClose={() => setShowDiscardModal(false)}
+        onDiscard={() => {
+          setActiveExercises([]);
+          setShowDiscardModal(false);
+        }}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f8f9fa", paddingTop: 30 },
-  title: { fontSize: 28, fontWeight: "800", marginBottom: 15, color: "black", paddingHorizontal: 20 },
+  title: { fontSize: 10, fontWeight: "800", marginBottom: 15, color: "black", paddingHorizontal: 20 },
   topButtonsRow: { flexDirection: "row", gap: 10, paddingHorizontal: 20, marginBottom: 20 },
   programButton: { flex: 2, backgroundColor: "#000", padding: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   primaryButton: { flex: 2, backgroundColor: "#000", padding: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
@@ -566,8 +580,11 @@ const styles = StyleSheet.create({
   fixedFooter: { paddingHorizontal: 50, paddingBottom: 12, backgroundColor: "#f8f9fa" },
   saveWorkoutButton: { backgroundColor: "#000", paddingVertical: 12, borderRadius: 16, alignItems: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 5, elevation: 4 },
   saveWorkoutText: { color: "white", fontSize: 16, fontWeight: "bold" },
-  saveAsProgramButton: { backgroundColor: "#e0e0e0", paddingVertical: 10, borderRadius: 16, alignItems: "center", marginTop: 10, shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 5, elevation: 4 },
+  dualButtonContainer: { flexDirection: "row", marginTop: 10 },
+  saveAsProgramButton: { flex: 0.85, backgroundColor: "#e0e0e0", paddingVertical: 10, borderBottomLeftRadius: 16, borderTopLeftRadius: 16, alignItems: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 5, elevation: 4 },
   saveAsProgramText: { color: "black", fontSize: 14, fontWeight: "600" },
+  discardWorkoutButton: { flex: 0.15, backgroundColor: "#e33f3d", borderTopRightRadius: 16, borderBottomRightRadius: 16, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 5, elevation: 4 },
+  buttoncontainer: { flexDirection: "row", justifyContent: "center",},
   emptyState: { flex: 1, justifyContent: "center", alignItems: "center" },
   emptyText: { color: "#888", fontSize: 16 },
   swipeList: { flex: 1 },
@@ -583,10 +600,10 @@ const styles = StyleSheet.create({
   headerText: { flex: 1, fontWeight: "700", color: "#888", textAlign: "left", fontSize: 12, textTransform: "uppercase" },
   setRow: { flexDirection: "row", alignItems: "center", marginBottom: 8, paddingVertical: 4 },
   setIndex: { flex: 0.3, textAlign: "left", fontSize: 16, fontWeight: "600", color: "#333" },
-  numberInput: { flex: 0.7, backgroundColor: "#f0f0f0", borderRadius: 8, padding: 12, marginHorizontal: 5, textAlign: "center", fontSize: 16, fontWeight: "500" },
+  numberInput: { flex: 0.7, backgroundColor: "#ebebeb", borderRadius: 8, padding: 12, marginHorizontal: 5, textAlign: "center", fontSize: 16, fontWeight: "500", shadowColor: "#000000ad", shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
   removeSetButton: { flex: 0.4, alignItems: "center", justifyContent: "flex-end" },
   removeSetText: { color: "grey", fontSize: 20, fontWeight: "300" },
   addSetButton: { width: "50%", marginTop: 1, paddingVertical: 10, backgroundColor: "#f0f8ff", borderRadius: 8, marginHorizontal: 50, alignSelf: "flex-start" },
   addSetText: { color: "#007AFF", fontWeight: "600", textAlign: "center", fontSize: 16 },
-  errorBorder: {borderWidth: 1, borderColor: "#ff19006f", }
+  errorBorder: {borderWidth: 1, borderColor: "#ff19006f", },
 });

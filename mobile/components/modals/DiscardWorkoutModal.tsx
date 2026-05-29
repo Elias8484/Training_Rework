@@ -6,26 +6,26 @@ import * as Haptics from 'expo-haptics';
 type Props = {
   visible: boolean;
   onClose: () => void;
-  onRemove: () => void;
+  onDiscard: () => void;
 };
 
-export default function ExerciseMenuModal({ visible, onClose, onRemove }: Props) {
+export default function DiscardWorkoutModal({ visible, onClose, onDiscard }: Props) {
   return (
     <BottomSheetModal visible={visible} onClose={onClose}>
-      <Text style={styles.modalTitle}>Exercise Options</Text>
+      <Text style={styles.modalTitle}>Discard Workout?</Text>
       
       <Pressable 
         style={({ pressed }) => [styles.actionButton, pressed && { backgroundColor: '#f0f0f0' }]} 
-        onPress={ () => {
-        if (Platform.OS === "ios") {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        } else if (Platform.OS === "android") {
-          Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Confirm);
-        }
-          onRemove();}
-      }
+        onPress={() => {
+          if (Platform.OS === "ios") {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          } else if (Platform.OS === "android") {
+            Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Confirm);
+          }
+          onDiscard();
+        }}
       >
-        <Text style={styles.menuActionDestructive}>Remove Exercise</Text>
+        <Text style={styles.menuActionDestructive}>Discard Workout</Text>
       </Pressable>
       
       <Pressable 

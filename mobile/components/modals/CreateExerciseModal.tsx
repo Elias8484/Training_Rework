@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, Pressable, TextInput, ScrollView, Dimensions, Keyboard } from "react-native";
+import { StyleSheet, Text, View, Pressable, TextInput, ScrollView, Dimensions, Keyboard, Platform } from "react-native";
 import BottomSheetModal from "./BottomSheetModal";
+import * as Haptics from 'expo-haptics';
 
 const MUSCLE_GROUPS = ["Chest", "Back", "Biceps", "Triceps", "Shoulders", "Quads", "Hamstrings", "Glutes", "Calves", "Core", "Forearms", "Traps", "Other"];
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -51,7 +52,14 @@ export default function CreateExerciseModal({ visible, onClose, onSave }: Props)
             <Pressable
               key={group}
               style={[styles.chip, muscle === group && styles.chipSelected]}
-              onPress={() => setMuscle(group)}
+              onPress={() => {
+                if (Platform.OS === "ios") {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                } else if (Platform.OS === "android") {
+                  Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Confirm);
+                }
+                setMuscle(group)}
+              }
             >
               <Text style={[styles.chipText, muscle === group && styles.chipTextSelected]}>
                 {group}
@@ -61,7 +69,14 @@ export default function CreateExerciseModal({ visible, onClose, onSave }: Props)
         </View>
         
         {/* Save knappen ligger nu alene nederst i din ScrollView */}
-        <Pressable style={styles.saveButton} onPress={handleSave}>
+        <Pressable style={styles.saveButton} onPress={ () => {
+          if (Platform.OS === "ios") {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          } else if (Platform.OS === "android") {
+            Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Confirm);
+          }
+          handleSave();}
+        }>
           <Text style={styles.saveText}>Save & Add</Text>
         </Pressable>
       </ScrollView>
