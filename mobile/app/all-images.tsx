@@ -11,6 +11,8 @@ import {
   Pressable,
 } from 'react-native';
 
+import { useAuth } from '../context/auth';
+
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
 const COLUMN_COUNT = 2;
 const { width } = Dimensions.get('window');
@@ -23,9 +25,14 @@ export default function AllImagesScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<ImageItem | null>(null);
+  const { token } = useAuth();
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/uploads/images`)
+    fetch(`${API_BASE}/api/uploads/images`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then((r) => r.json())
       .then(setImages)
       .catch(() => setError('Failed to load images.'))

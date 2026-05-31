@@ -82,6 +82,7 @@ public class UploadsController : ControllerBase
         return Ok(images);
     }
 
+    [AllowAnonymous]
     [HttpGet("images/{fileName}")]
     public IActionResult GetImage(string fileName)
     {

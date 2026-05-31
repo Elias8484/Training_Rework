@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { View, Text, Pressable, Image, ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-
+import { useAuth } from '../../context/auth';
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
 
 export default function PhotoTestScreen() {
   const [image, setImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const { token } = useAuth();
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -49,6 +50,7 @@ export default function PhotoTestScreen() {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`,
         },
       });
 
