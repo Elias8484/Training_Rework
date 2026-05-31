@@ -1,4 +1,4 @@
-using Backend.Services;
+
 using Backend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -20,9 +20,6 @@ builder.Services.AddCors(options =>
          .AllowAnyHeader()
          .AllowAnyMethod());
 });
-
-builder.Services.AddSingleton<CounterState>();
-
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
     ?? throw new Exception("Connection string is missing!");
