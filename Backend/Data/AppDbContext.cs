@@ -21,6 +21,11 @@ public class AppDbContext : DbContext
 
     public DbSet<ProgramEntry> ProgramEntries { get; set; }
 
+    //  Should not be neccesary now that i have [column] added below [key] -
+    //  in the models that need custom id names
+
+/*
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>().Property(u => u.Id).HasColumnName("user_id");
@@ -32,4 +37,6 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Models.Program>().Property(s => s.Id).HasColumnName("program_id");
         modelBuilder.Entity<ProgramEntry>().Property(s => s.Id).HasColumnName("program_entry_id");
     }
+*/
+
 }
