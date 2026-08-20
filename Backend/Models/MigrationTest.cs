@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Backend.Models;
 
-[Table("MigrationTests")]
+[Table("migrationtests")]
 public class MigrationTest
 {
     [Key]
