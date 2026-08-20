@@ -62,6 +62,13 @@ public class ExerciseController : ControllerBase
         }
     }
 
+    [AllowAnonymous]
+    [HttpGet("deployTest")]
+    public IActionResult DeployTest()
+    {
+    return Ok(new { message = "Deploy pipeline works", version = "v1", time = DateTime.UtcNow });
+    }
+
     [HttpPost("saveWorkout")]
     public async Task<IActionResult> SaveWorkout([FromBody] SaveWorkoutRequest req){
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
