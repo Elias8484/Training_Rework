@@ -21,6 +21,8 @@ public class AppDbContext : DbContext
 
     public DbSet<ProgramEntry> ProgramEntries { get; set; }
 
+    public DbSet<MigrationTest> MigrationTests { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>().Property(u => u.Id).HasColumnName("user_id");
