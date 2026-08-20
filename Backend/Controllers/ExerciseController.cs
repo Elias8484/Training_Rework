@@ -14,7 +14,7 @@ public class ExerciseController : ControllerBase
 
     public record CreateExerciseRequest(string Name, string MuscleGroup);
 
-    // Nested saveworkout request with the 3 records below
+    // Nested saveworkout request with the 3 records beloww
     public record SetRequest(double Kg, int Reps);
     public record ExerciseRequest(long ExerciseId, List<SetRequest> Sets);
     public record SaveWorkoutRequest(string Name, List<ExerciseRequest> Exercises);
