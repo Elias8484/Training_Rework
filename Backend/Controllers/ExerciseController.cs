@@ -66,7 +66,7 @@ public class ExerciseController : ControllerBase
     [HttpGet("deployTest")]
     public IActionResult DeployTest()
     {
-    return Ok(new { message = "Deploy pipeline works", version = "v1", time = DateTime.UtcNow });
+    return Ok(new { message = "Deploy pipeline works", version = "v2", time = DateTime.UtcNow });
     }
 
     [HttpPost("saveWorkout")]
