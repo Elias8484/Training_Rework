@@ -67,7 +67,7 @@ public class AuthTests : IClassFixture<CustomWebApplicationFactory>, IAsyncLifet
             password = "TestPassword123"
         });
 
-        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, res.StatusCode);
     }
 
     [Fact]
