@@ -32,7 +32,7 @@ public class ExerciseController : ControllerBase
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var exercises = await _context.Exercises.Where(e => e.UserId == userId && !e.IsDeleted)
-                                                .Select(e => new { e.Id, e.Name, e.MuscleGroup })
+                                                .Select(e => new { e.Id, e.Name, e.MuscleGroup, e.Notes })
                                                 .ToListAsync();
         return Ok(exercises);
     }

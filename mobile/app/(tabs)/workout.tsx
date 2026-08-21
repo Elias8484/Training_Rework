@@ -56,7 +56,7 @@ export default function WorkoutScreen() {
 
   const [activeExercises, setActiveExercises] = useState<Exercise[]>([]);
   const [predefinedExercises, setPredefinedExercises] = 
-  useState<{id: string, name: string, muscleGroup: string}[]>([])
+  useState<{id: string, name: string, muscleGroup: string, notes: string}[]>([])
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showChooseModal, setShowChooseModal] = useState(false);
@@ -247,7 +247,7 @@ const saveWorkoutPost = async () => {
     }
   };
 
-  const addExistingExercise = async (ex: { id: string; name: string; muscleGroup: string }, skipDuplicateCheck = false) => {
+  const addExistingExercise = async (ex: { id: string; name: string; muscleGroup: string, notes: string; }, skipDuplicateCheck = false) => {
     let sets: WorkoutSet[] = [{ id: Date.now() + "-set-0", weight: "", reps: "" }];
     let lastSets: { kg: number; reps: number }[] | undefined;
 
@@ -276,7 +276,7 @@ const saveWorkoutPost = async () => {
       id: `${ex.id}-${Date.now()}`,
       name: ex.name,
       muscleGroup: ex.muscleGroup,
-      notes: "",
+      notes: ex.notes,
       sets,
       lastSets,
     };

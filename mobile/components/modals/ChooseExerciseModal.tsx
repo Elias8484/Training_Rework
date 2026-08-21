@@ -3,7 +3,7 @@ import React, {useState} from "react";
 import { StyleSheet, Text, View, Pressable, ScrollView, Modal, Platform, Dimensions, TextInput } from "react-native";
 import * as Haptics from 'expo-haptics';
 
-type ExerciseData = { id: string; name: string; muscleGroup: string };
+type ExerciseData = { id: string; name: string; muscleGroup: string; notes: string; };
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 type Props = {
