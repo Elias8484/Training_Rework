@@ -155,6 +155,7 @@ const saveWorkoutPost = async () => {
           if(res.ok){
             await AsyncStorage.removeItem(sessionKey);
             setActiveExercises([]);
+            await fetchExercises();
           } else {
             const text = await res.text();
             console.error("Save workout failed", text);

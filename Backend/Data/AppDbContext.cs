@@ -21,8 +21,6 @@ public class AppDbContext : DbContext
 
     public DbSet<ProgramEntry> ProgramEntries { get; set; }
 
-    public DbSet<MigrationTest> MigrationTests { get; set; }
-
     //  Should not be neccesary now that i have [column] added below [key] -
     //  in the models that need custom id names
 
