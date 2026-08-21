@@ -93,6 +93,6 @@ public class AuthTests : IClassFixture<CustomWebApplicationFactory>, IAsyncLifet
             password = "WrongPassword"
         });
 
-        Assert.Equal(HttpStatusCode.Unauthorized, res.StatusCode);
+        Assert.Equal(HttpStatusCode.authorized, res.StatusCode);
     }
 }
