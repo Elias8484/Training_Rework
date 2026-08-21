@@ -36,6 +36,12 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Check secret is set
+        run: |
+          if [ -z "$TEST_DB_CONNECTION_STRING" ]; then echo "ERROR: TEST_DB_CONNECTION_STRING is empty"; exit 1; fi
+          echo "Connection string length: ${#TEST_DB_CONNECTION_STRING}"
+        env:
+          TEST_DB_CONNECTION_STRING: ${{ secrets.TEST_DB_CONNECTION_STRING }}
       - name: Run tests
         env:
           TEST_DB_CONNECTION_STRING: ${{ secrets.TEST_DB_CONNECTION_STRING }}

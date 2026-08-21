@@ -16,7 +16,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             };
 
             var testConnStr = Environment.GetEnvironmentVariable("TEST_DB_CONNECTION_STRING");
-            if (testConnStr != null)
+            if (!string.IsNullOrWhiteSpace(testConnStr))
                 overrides["ConnectionStrings:DefaultConnection"] = testConnStr;
 
             config.AddInMemoryCollection(overrides);
