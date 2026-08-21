@@ -16,7 +16,7 @@ public class ExerciseController : ControllerBase
 
     // Nested saveworkout request with the 3 records beloww
     public record SetRequest(double Kg, int Reps);
-    public record ExerciseRequest(long ExerciseId, List<SetRequest> Sets);
+    public record ExerciseRequest(long ExerciseId, string? Notes, List<SetRequest> Sets);
     public record SaveWorkoutRequest(string Name, List<ExerciseRequest> Exercises);
 
     public record SaveProgramRequest (string Name, List<long> ExerciseIds);
@@ -102,6 +102,11 @@ public class ExerciseController : ControllerBase
                  if (validSets.Count == 0) continue;
 
                 workoutTotalExercises++;
+                
+                // Save notes on the specific exercise to the exercise table
+                var currentExercise = await _context.Exercises.FindAsync(exercise.ExerciseId);
+                if (currentExercise != null)
+                    currentExercise.Notes = exercise.Notes;
 
                 _context.WorkoutEntries.Add(workoutEntry);
                 await _context.SaveChangesAsync();

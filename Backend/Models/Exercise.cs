@@ -20,6 +20,9 @@ public class Exercise
     [Column("muscle_group")]
     public string MuscleGroup { get; set; }
 
+    [Column("notes")]
+    public string Notes { get; set; }
+
     [Column("created_at")]
     public DateTime? CreatedAt { get; set; }
 

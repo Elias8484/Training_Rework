@@ -144,6 +144,7 @@ const saveWorkoutPost = async () => {
               name: "My Workout",
               exercises: activeExercises.map(ex => ({
                 exerciseId: parseInt(ex.id.split('-')[0]),
+                notes: ex.notes,
                 sets: ex.sets.map(s => ({
                   kg: parseFloat(s.weight.replace(',', '.')) || 0,
                   reps: parseInt(s.reps) || 0
