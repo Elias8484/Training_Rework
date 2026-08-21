@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import {StyleSheet, Text, View, Pressable, TextInput, FlatList, Dimensions, ScrollView, Alert, Animated, ViewToken, Platform } from "react-native";
+import {StyleSheet, Text, View, Pressable, TextInput, FlatList, Dimensions, ScrollView, Alert, Animated, ViewToken, Platform, KeyboardAvoidingView } from "react-native";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useAuth } from "../../context/auth";
 import Paginator from "../../components/Paginator";
@@ -20,7 +20,7 @@ const MUSCLE_GROUPS = ["Chest", "Back", "Biceps", "Triceps", "Shoulders", "Quads
 type WorkoutSet = { id: string; weight: string; reps: string;
                     lastKg?: number; lastReps?: number;
                   };
-type Exercise = { id: string; name: string; muscleGroup: string;
+type Exercise = { id: string; name: string; muscleGroup: string; notes: string;
                   sets: WorkoutSet[];
                   lastSets?: { kg: number; reps: number }[]; };
 
@@ -70,12 +70,21 @@ export default function WorkoutScreen() {
   const [emptyFields, setEmptyFields] = useState<string[]>([]);
   const flatListRef = useRef<FlatList>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
-  
+  const [openNotes, setOpenNotes] = useState<Set<string>>(new Set());
+
   const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
     if (viewableItems && viewableItems.length > 0) {
       setCurrentIndex(viewableItems[0].index ?? 0);
     }
   }).current;
+
+  const toggleNotes = (id: string) => {
+    setOpenNotes(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
 
   const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
 
@@ -214,6 +223,7 @@ const saveWorkoutPost = async () => {
         id: data.id.toString(),
         name: data.name,
         muscleGroup: data.muscleGroup,
+        notes: "",
         sets: [{ id: Date.now().toString() + "-set", weight: "", reps: "" }],
       };
       setActiveExercises([newEx, ...activeExercises]);
@@ -265,6 +275,7 @@ const saveWorkoutPost = async () => {
       id: `${ex.id}-${Date.now()}`,
       name: ex.name,
       muscleGroup: ex.muscleGroup,
+      notes: "",
       sets,
       lastSets,
     };
@@ -302,7 +313,7 @@ const saveWorkoutPost = async () => {
     );
   };
 
-const updateSet = (exerciseId: string, setId: string, field: "weight" | "reps", value: string) => {
+  const updateSet = (exerciseId: string, setId: string, field: "weight" | "reps", value: string) => {
     // Fjern dette felt fra "tomme felter" listen
     setEmptyFields((prev) => prev.filter((id) => id !== `${exerciseId}-${setId}-${field}`));
 
@@ -316,6 +327,12 @@ const updateSet = (exerciseId: string, setId: string, field: "weight" | "reps", 
       })
     );
   };
+
+  const updateNotes = (exerciseId: string, value: string) => {
+    setActiveExercises(prev =>
+      prev.map(ex => ex.id === exerciseId ? { ...ex, notes: value } : ex)
+    );
+  } ;
 
   const removeSet = (exerciseId: string, setId: string) => {
     setActiveExercises(
@@ -418,48 +435,68 @@ const updateSet = (exerciseId: string, setId: string, field: "weight" | "reps", 
           <View style={{ flex: 0.5 }} />
           <View style={{ flex: 0.5 }} />
         </View>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {exercise.sets.map((set, index) => (
-            <View key={set.id} style={styles.setRow}>
-              <Text style={styles.setIndex}>{index + 1}</Text>
+
+        <View style={{ flex: 1 }}>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {exercise.sets.map((set, index) => (
+              <View key={set.id} style={styles.setRow}>
+                <Text style={styles.setIndex}>{index + 1}</Text>
                 <TextInput
-                style={[
-                  styles.numberInput,
-                  emptyFields.includes(`${exercise.id}-${set.id}-weight`) && styles.errorBorder
-                ]}
-                placeholder={set.lastKg !== undefined ? String(set.lastKg) : "0"}
-                placeholderTextColor="grey"
-                keyboardType="numeric"
-                value={set.weight}
-                onChangeText={(val) => updateSet(exercise.id, set.id, "weight", val)}
-              />
-              <TextInput
-                style={[
-                  styles.numberInput,
-                  emptyFields.includes(`${exercise.id}-${set.id}-reps`) && styles.errorBorder
-                ]}
-                placeholder={set.lastReps !== undefined ? String(set.lastReps) : "0"}
-                placeholderTextColor="grey"
-                keyboardType="numeric"
-                value={set.reps}
-                onChangeText={(val) => updateSet(exercise.id, set.id, "reps", val)}
-              />
-              <TrendBadge set={set} />
-              <Pressable style={styles.removeSetButton} onPress={() => removeSet(exercise.id, set.id)}>
-                <Text style={styles.removeSetText}>×</Text>
-              </Pressable>
-            </View>
-          ))}
-          <Pressable style={styles.addSetButton} onPress={() => addSet(exercise.id)}>
-            <Text style={styles.addSetText}>+</Text>
+                  style={[styles.numberInput, emptyFields.includes(`${exercise.id}-${set.id}-weight`) && styles.errorBorder]}
+                  placeholder={set.lastKg !== undefined ? String(set.lastKg) : "0"}
+                  placeholderTextColor="grey"
+                  keyboardType="numeric"
+                  value={set.weight}
+                  onChangeText={(val) => updateSet(exercise.id, set.id, "weight", val)}
+                />
+                <TextInput
+                  style={[styles.numberInput, emptyFields.includes(`${exercise.id}-${set.id}-reps`) && styles.errorBorder]}
+                  placeholder={set.lastReps !== undefined ? String(set.lastReps) : "0"}
+                  placeholderTextColor="grey"
+                  keyboardType="numeric"
+                  value={set.reps}
+                  onChangeText={(val) => updateSet(exercise.id, set.id, "reps", val)}
+                />
+                <TrendBadge set={set} />
+                <Pressable style={styles.removeSetButton} onPress={() => removeSet(exercise.id, set.id)}>
+                  <Text style={styles.removeSetText}>×</Text>
+                </Pressable>
+              </View>
+            ))}
+            <Pressable style={styles.addSetButton} onPress={() => addSet(exercise.id)}>
+              <Text style={styles.addSetText}>+</Text>
+            </Pressable>
+          </ScrollView>
+
+        </View>
+
+        <View style={styles.cardBottomBar}>
+          <Pressable
+            onPress={() => toggleNotes(exercise.id)}
+            style={({ pressed }) => [styles.notesIconButton, pressed && { opacity: 0.6 }]}
+          >
+            <FontAwesome name="sticky-note-o" size={22} color={openNotes.has(exercise.id) ? "#007AFF" : "#888"} />
           </Pressable>
-        </ScrollView>
+        </View>
+
+        {openNotes.has(exercise.id) && (
+          <View style={styles.notesPanel}>
+            <TextInput
+              style={styles.notesInput}
+              placeholder={`Type your notes for ${exercise.name} here...`}
+              placeholderTextColor="#999"
+              value={exercise.notes}
+              onChangeText={(val) => updateNotes(exercise.id, val)}
+              multiline
+            />
+          </View>
+        )}
       </View>
     </View>
   );
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <Toast ref={toastRef} />
       <View style={styles.topButtonsRow}>
         <Pressable style={styles.primaryButton} onPress={() => setShowChooseModal(true)}>
@@ -564,7 +601,7 @@ const updateSet = (exerciseId: string, setId: string, field: "weight" | "reps", 
           setShowDiscardModal(false);
         }}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -606,4 +643,11 @@ const styles = StyleSheet.create({
   addSetButton: { width: "50%", marginTop: 1, paddingVertical: 10, backgroundColor: "#f0f8ff", borderRadius: 8, marginHorizontal: 50, alignSelf: "flex-start" },
   addSetText: { color: "#007AFF", fontWeight: "600", textAlign: "center", fontSize: 16 },
   errorBorder: {borderWidth: 1, borderColor: "#ff19006f", },
+  notesInput: { fontSize: 14, color: "#111", flex: 1 },
+  notesPanel: { position: "absolute", bottom: 4, left: 50, right: 4, height: 80, backgroundColor: "white", borderRadius: 10, padding: 8, borderWidth: 1, borderColor: "#d0d0d0" },
+  cardBottomBar: { paddingTop: 4, paddingLeft: 0, paddingRight: 4, borderTopWidth: 1, borderTopColor: "#f0f0f0" },
+  notesIconButton: { padding: 6, borderRadius: 8, marginLeft: -12, borderWidth: 1, borderColor: "#e0e0e0", backgroundColor: "#f7f7f7" },
+
+
+
 });
