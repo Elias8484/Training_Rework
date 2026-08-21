@@ -6,22 +6,16 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.UseEnvironment("Development");
+
         builder.ConfigureAppConfiguration((context, config) =>
         {
-            var overrides = new Dictionary<string, string?>
+            config.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Jwt:Key"] = "test-secret-key-that-is-at-least-32-characters-long",
                 ["Jwt:Issuer"] = "test-issuer",
                 ["Jwt:Audience"] = "test-audience",
-            };
-
-            var testConnStr = Environment.GetEnvironmentVariable("TEST_DB_CONNECTION_STRING");
-            if (!string.IsNullOrWhiteSpace(testConnStr))
-                overrides["ConnectionStrings:DefaultConnection"] = testConnStr;
-
-            config.AddInMemoryCollection(overrides);
+            });
         });
-
-        builder.UseEnvironment("Development");
     }
 }
