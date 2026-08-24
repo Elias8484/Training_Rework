@@ -21,7 +21,7 @@ public class Exercise
     public string MuscleGroup { get; set; }
 
     [Column("notes")]
-    public string Notes { get; set; }
+    public string Notes { get; set; } = string.Empty;
 
     [Column("created_at")]
     public DateTime? CreatedAt { get; set; }
