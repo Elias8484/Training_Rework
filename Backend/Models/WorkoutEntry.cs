@@ -17,4 +17,7 @@ public class WorkoutEntry
     [ForeignKey("Exercise")]
     [Column("exercise_id")]
     public long ExerciseId { get; set; }
+
+    public Exercise Exercise { get; set; } = null!;
+    public ICollection<Set> Sets { get; set; } = new List<Set>();
 }

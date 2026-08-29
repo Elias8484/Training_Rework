@@ -32,5 +32,5 @@ public class Workout
     [Column("total_reps")]
     public double TotalReps { get; set; }
 
-
+    public ICollection<WorkoutEntry> WorkoutEntries { get; set; } = new List<WorkoutEntry>();
 }
