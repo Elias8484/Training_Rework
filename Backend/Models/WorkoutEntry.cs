@@ -19,5 +19,5 @@ public class WorkoutEntry
     public long ExerciseId { get; set; }
 
     public Exercise Exercise { get; set; } = null!;
-    public ICollection<Set> Sets { get; set; } = new List<Set>();
+    public ICollection<Set> Sets { get; set; } = [];
 }
