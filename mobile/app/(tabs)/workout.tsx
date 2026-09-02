@@ -51,7 +51,7 @@ function TrendBadge({ set }: { set: WorkoutSet }) {
 }
 
 export default function WorkoutScreen() {
-  const { token, user} = useAuth();
+  const { token, user, markWorkoutSaved} = useAuth();
   const sessionKey = `activeWorkout_${user?.id}`;
 
   const [activeExercises, setActiveExercises] = useState<Exercise[]>([]);
@@ -156,6 +156,7 @@ const saveWorkoutPost = async () => {
             await AsyncStorage.removeItem(sessionKey);
             setActiveExercises([]);
             await fetchExercises();
+            markWorkoutSaved();
           } else {
             const text = await res.text();
             console.error("Save workout failed", text);

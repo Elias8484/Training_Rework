@@ -13,14 +13,18 @@ type AuthContextType = {
   login: (user: AuthUser, token: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
+  lastWorkoutSaved: number;
+  markWorkoutSaved: () => void; 
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
+
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastWorkoutSaved, setLastWorkoutSaved] = useState(0);
 
    useEffect(() => {
     const loadSession = async () => {
@@ -54,8 +58,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(null);
   };
 
+  const markWorkoutSaved = () => setLastWorkoutSaved(Date.now());
+
     return (
-    <AuthContext.Provider value={{ user, token, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isLoading, lastWorkoutSaved, markWorkoutSaved }}>
       {children}
     </AuthContext.Provider>
   );
