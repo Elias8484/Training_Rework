@@ -18,13 +18,14 @@ public class WorkoutHistoryController : ControllerBase {
 
     [AllowAnonymous]
     [HttpGet("getHistory")]
-    public async Task<IActionResult> GetHistory([FromQuery] int pastWorkoutQuantity)
+    public async Task<IActionResult> GetHistory([FromQuery] int pastWorkoutQuantity, [FromQuery] int offset = 0)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         var workouts = await _context.Workouts
             .Where(w => w.UserId == userId)
             .OrderByDescending(w => w.CreatedAt)
+            .Skip(offset)
             .Take(pastWorkoutQuantity)
             .Include(w => w.WorkoutEntries)
                 .ThenInclude(e => e.Exercise)
