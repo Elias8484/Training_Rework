@@ -16,7 +16,6 @@ public class WorkoutHistoryController : ControllerBase {
         _context = context;
     }
 
-    [AllowAnonymous]
     [HttpGet("getHistory")]
     public async Task<IActionResult> GetHistory([FromQuery] int pastWorkoutQuantity, [FromQuery] int offset = 0)
     {

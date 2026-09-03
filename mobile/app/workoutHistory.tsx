@@ -2,13 +2,15 @@ import { View, Text, StyleSheet, FlatList, ActivityIndicator } from "react-nativ
 import { useEffect } from "react";
 import WorkoutHistoryCard from "@/components/WorkoutHistoryCard";
 import { useWorkoutHistory } from "../hooks/useWorkoutHistory";
+import { useAuth } from "../context/auth";
 
 const PAGE_SIZE = 6;
 
 export default function WorkoutHistoryScreen() {
+  const { token } = useAuth();
   const { workouts, fetchWorkouts, loadMore, isLoading } = useWorkoutHistory();
 
-  useEffect(() => { fetchWorkouts(PAGE_SIZE); }, []);
+  useEffect(() => { fetchWorkouts(PAGE_SIZE); }, [token]);
 
   return (
     <View style={styles.container}>

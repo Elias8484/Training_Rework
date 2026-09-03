@@ -8,13 +8,13 @@ import { useWorkoutHistory } from "../../hooks/useWorkoutHistory";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { lastWorkoutSaved } = useAuth();
+  const { lastWorkoutSaved, token } = useAuth();
   const { workouts, fetchWorkouts } = useWorkoutHistory();
 
   useFocusEffect(
     useCallback(() => {
       fetchWorkouts(2);
-    }, [lastWorkoutSaved])
+    }, [lastWorkoutSaved, token])
   );
 
   return (

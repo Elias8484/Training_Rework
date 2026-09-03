@@ -18,12 +18,18 @@ export function useWorkoutHistory() {
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchWorkouts = async (pastWorkoutQuantity: number, newOffset = 0) => {
+    if (!token) return;
+
     setIsLoading(true);
     try {
       const res = await fetch(
         `${API_BASE}/api/history/getHistory?pastWorkoutQuantity=${pastWorkoutQuantity}&offset=${newOffset}`,
         { headers: { "Authorization": `Bearer ${token}` } }
       );
+      if (!res.ok) {
+        console.error("getHistory failed", res.status, await res.text());
+        return;
+      }
       const data: WorkoutHistory[] = await res.json();
 
       setWorkouts(prev => (newOffset === 0 ? data : [...prev, ...data]));
