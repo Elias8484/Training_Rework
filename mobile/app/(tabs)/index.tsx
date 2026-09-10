@@ -39,6 +39,7 @@ export default function HomeScreen() {
             muscles={w.muscleGroups.map(m => ({ name: m.muscleGroup, sets: m.sets }))}
             date={new Date(w.createdAt).toLocaleDateString()}
             totalKg={w.totalKg}
+            onPress={() => router.push({ pathname: "/workout/[id]", params: { id: String(w.id) } })}
           />
         ))
       )}

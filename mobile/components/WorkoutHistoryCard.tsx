@@ -1,15 +1,16 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Pressable} from "react-native";
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 
 export type MuscleGroup = { name: string; sets: number };
 
 export type WorkoutCardProps = {
+  onPress?: () => void;
   muscles: MuscleGroup[];
   date: string;
   totalKg: number;
 };
 
-export default function WorkoutHistoryCard({ muscles, date, totalKg }: WorkoutCardProps) {
+export default function WorkoutHistoryCard({ muscles, date, totalKg, onPress }: WorkoutCardProps) {
   const sorted = [...muscles].sort((a, b) => b.sets - a.sets);
   const displayed = sorted.slice(0, 2);
   const remaining = sorted.slice(2);
@@ -19,7 +20,7 @@ export default function WorkoutHistoryCard({ muscles, date, totalKg }: WorkoutCa
     : displayed;
 
   return (
-    <View style={styles.card}>
+    <Pressable style={({pressed}) => [styles.card, pressed && {opacity: 0.7}]} onPress={onPress}>
       <FontAwesome5 name="dumbbell" size={24} color="#0dd8ac" />
 
       <View style={styles.muscleRow}>
@@ -35,7 +36,7 @@ export default function WorkoutHistoryCard({ muscles, date, totalKg }: WorkoutCa
         <Text style={styles.dateText}>{date}</Text>
         <Text style={styles.kgText}>{totalKg}kg</Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
