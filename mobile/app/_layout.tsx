@@ -1,16 +1,13 @@
 import 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useEffect } from 'react';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthProvider, useAuth } from '@/context/auth';
 
 function RootNavigator() {
   const { user, isLoading } = useAuth();
-  const colorScheme = useColorScheme();
   const router = useRouter();
   const segments = useSegments();
 
@@ -29,7 +26,7 @@ function RootNavigator() {
   if (isLoading) return null;
 
   return (
-    <ThemeProvider value={DefaultTheme}>
+    <>
       <Stack>
         <Stack.Screen name="sign-in" options={{ headerShown: false }} />
         <Stack.Screen name="sign-up" options={{ headerShown: false }} />
@@ -37,7 +34,7 @@ function RootNavigator() {
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
       <StatusBar style="auto" />
-    </ThemeProvider>
+    </>
   );
 }
 

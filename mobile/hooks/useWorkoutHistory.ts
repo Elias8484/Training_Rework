@@ -27,7 +27,10 @@ export function useWorkoutHistory() {
         { headers: { "Authorization": `Bearer ${token}` } }
       );
       if (!res.ok) {
-        console.error("getHistory failed", res.status, await res.text());
+        const reason = res.status === 401
+          ? res.headers.get("www-authenticate")
+          : await res.text();
+        console.error("getHistory failed", res.status, reason);
         return;
       }
       const data: WorkoutHistory[] = await res.json();
