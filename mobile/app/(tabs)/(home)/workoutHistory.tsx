@@ -1,8 +1,8 @@
 import { View, Text, StyleSheet, FlatList, ActivityIndicator } from "react-native";
 import { useEffect } from "react";
 import WorkoutHistoryCard from "@/components/WorkoutHistoryCard";
-import { useWorkoutHistory } from "../hooks/useWorkoutHistory";
-import { useAuth } from "../context/auth";
+import { useWorkoutHistory } from "@/hooks/useWorkoutHistory";
+import { useAuth } from "@/context/auth";
 import { useRouter} from "expo-router";
 
 const PAGE_SIZE = 6;
@@ -29,7 +29,7 @@ export default function WorkoutHistoryScreen() {
             muscles={item.muscleGroups.map(m => ({ name: m.muscleGroup, sets: m.sets }))}
             date={new Date(item.createdAt).toLocaleDateString()}
             totalKg={item.totalKg}
-            onPress={() => router.push({ pathname: "/workout/[id]", params: { id: String(item.id) } })}
+            onPress={() => router.push({ pathname: "/workoutDetail/[id]", params: { id: String(item.id) } })}
           />
         )}
         onEndReached={() => loadMore(PAGE_SIZE)}

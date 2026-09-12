@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Backend.Models;
 using Backend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
@@ -40,6 +39,34 @@ public class WorkoutHistoryController : ControllerBase {
                 .GroupBy(e => e.Exercise.MuscleGroup)
                 .Select(g => new { MuscleGroup = g.Key, Sets = g.Sum(e => e.Sets.Count) })
                 .ToList()
+        });
+
+        return Ok(result);
+    }
+
+    [HttpGet("getDetails/{id}")]
+    public async Task<IActionResult> GetDetails(int id)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        var workout = await _context.Workouts
+            .Where(w => w.UserId == userId && w.Id == id)
+            .Include(w => w.WorkoutEntries).ThenInclude(e => e.Exercise)
+            .Include(w => w.WorkoutEntries).ThenInclude(e => e.Sets)
+            .FirstOrDefaultAsync();
+
+        if (workout == null) return NotFound();
+        
+        
+        var result = ( new {
+            workout.Id,
+            workout.CreatedAt,
+            workout.TotalKg,
+            Exercises = workout.WorkoutEntries.Select(e => new {
+                e.Exercise.Name,
+                e.Exercise.MuscleGroup,
+                Sets = e.Sets.Select(s => new { s.Kg, s.Reps }).ToList()
+            }).ToList()
         });
 
         return Ok(result);

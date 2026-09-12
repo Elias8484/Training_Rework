@@ -2,9 +2,9 @@ import { View, Text, StyleSheet, Pressable } from "react-native";
 import { useCallback } from "react";
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useRouter, useFocusEffect } from "expo-router";
-import { useAuth } from "../../context/auth";
+import { useAuth } from "@/context/auth";
 import WorkoutHistoryCard from "@/components/WorkoutHistoryCard";
-import { useWorkoutHistory } from "../../hooks/useWorkoutHistory";
+import { useWorkoutHistory } from "@/hooks/useWorkoutHistory";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -39,7 +39,7 @@ export default function HomeScreen() {
             muscles={w.muscleGroups.map(m => ({ name: m.muscleGroup, sets: m.sets }))}
             date={new Date(w.createdAt).toLocaleDateString()}
             totalKg={w.totalKg}
-            onPress={() => router.push({ pathname: "/workout/[id]", params: { id: String(w.id) } })}
+            onPress={() => router.push({ pathname: "/workoutDetail/[id]", params: { id: String(w.id) } })}
           />
         ))
       )}

@@ -1,39 +1,28 @@
-import { Tabs, router } from 'expo-router';
-import { Pressable, Text } from 'react-native';
+import { Tabs } from 'expo-router';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { LogoutButton } from '@/components/LogoutButton';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useAuth } from '@/context/auth';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const { logout } = useAuth();
-
-  function handleLogout() {
-    logout();
-    router.replace('/sign-in');
-  }
-
-  const logoutButton = (
-    <Pressable onPress={handleLogout} style={{ marginRight: 16 }}>
-      <Text style={{ color: 'red', fontSize: 16 }}>Logout</Text>
-    </Pressable>
-  );
 
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: true,
-        headerRight: () => logoutButton,
+        headerRight: () => <LogoutButton />,
         tabBarButton: HapticTab,
       }}>
       <Tabs.Screen
-        name="index"
+        name="(home)"
         options={{
           title: 'Home',
+          // The (home) group has its own Stack that owns the header
+          headerShown: false,
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
         }}
       />
