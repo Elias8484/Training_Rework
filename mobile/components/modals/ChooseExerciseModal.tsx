@@ -38,14 +38,14 @@ const filteredExercises = exercises.filter((ex) =>
             </Pressable>
             <Pressable style={styles.modalTitleButton} onPress={() => console.log("Discover clicked")}>
               <Text style={styles.modalTitle2}>Discover</Text>
-              <Text style={{fontSize: 12, color: "#888", marginTop: 2}}>coming soon..</Text>
+              <Text style={{fontSize: 12, color: "#8e8e93", marginTop: 2}}>coming soon..</Text>
             </Pressable>
           </View>
           
           <TextInput
           style={styles.searchInput}
           placeholder="Search exercises..."
-          placeholderTextColor="#888"
+          placeholderTextColor="#6e6e73"
           value={searchQuery}
           onChangeText={setSearchQuery}
           autoCorrect={false}
@@ -56,7 +56,7 @@ const filteredExercises = exercises.filter((ex) =>
                 key={ex.id} 
                 style={({ pressed }) => [
                   styles.existingExerciseRow,
-                  pressed && { backgroundColor: '#f8f8f8' } // Flot grå tryk-effekt
+                  pressed && { backgroundColor: '#2c2c2e' }
                 ]}
                 onPress={() => { 
                   if (Platform.OS === "ios") {
@@ -86,7 +86,7 @@ const filteredExercises = exercises.filter((ex) =>
           <Pressable 
             style={({ pressed }) => [
               styles.closeModalSection,
-              pressed && { backgroundColor: '#f0f0f0' }
+              pressed && { backgroundColor: '#2c2c2e' }
             ]} 
             onPress={onClose}
           >
@@ -99,42 +99,40 @@ const filteredExercises = exercises.filter((ex) =>
 }
 
 const styles = StyleSheet.create({
-  centeredOverlay: { flex: 1, backgroundColor: "rgba(0, 0, 0, 0.6)", justifyContent: "center", paddingHorizontal: 20 },
-  
-  modalContent: { backgroundColor: "white", paddingTop: 14, height: SCREEN_HEIGHT * 0.50, borderRadius: 16, },
-  modalTitleRow: { flexDirection: "row", gap: 10, marginBottom: 10, paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: "#f0f0f0", paddingBottom: 10 },
-  modalTitleButton: { flex: 1, backgroundColor: "#f0f0f0", paddingVertical: 2, borderRadius: 10, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 8, elevation: 5 },
-  modalTitle2: { fontSize: 14, fontWeight: "bold", color: "black" },
-  
-  existingExerciseRow: { 
-    flexDirection: "row", 
-    justifyContent: "space-between", 
+  centeredOverlay: { flex: 1, backgroundColor: "rgba(0, 0, 0, 0.7)", justifyContent: "center", paddingHorizontal: 20 },
+
+  modalContent: { backgroundColor: "#1c1c1e", paddingTop: 14, height: SCREEN_HEIGHT * 0.50, borderRadius: 16, },
+  modalTitleRow: { flexDirection: "row", gap: 10, marginBottom: 10, paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: "#3a3a3c", paddingBottom: 10 },
+  modalTitleButton: { flex: 1, backgroundColor: "#2c2c2e", paddingVertical: 2, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  modalTitle2: { fontSize: 14, fontWeight: "bold", color: "white" },
+
+  existingExerciseRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    padding: 10, 
-    paddingHorizontal: 20, 
-    borderBottomWidth: 1, 
-    borderColor: "#f0f0f0",
+    padding: 10,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderColor: "#3a3a3c",
     borderTopWidth: 1,
     borderRadius: 10,
   },
-  existingName: { fontSize: 16, fontWeight: "600" },
-  existingMuscle: { color: "#888", fontSize: 13, marginTop: 2 },
-  
-  deleteButton: { padding: 5, justifyContent: "center", alignItems: "center" },
-  deleteButtonText: { color: "lightgrey", fontSize: 26, fontWeight: "400", lineHeight: 26 },
+  existingName: { fontSize: 16, fontWeight: "600", color: "white" },
+  existingMuscle: { color: "#8e8e93", fontSize: 13, marginTop: 2 },
 
-  closeModalSection: { paddingVertical: 12, borderTopWidth: 1, borderTopColor: "#eee", alignItems: "center", justifyContent: "center", borderBottomLeftRadius: 16, borderBottomRightRadius: 16 },
-  cancelTextCentered: { color: "black", fontSize: 16, fontWeight: "600" },
+  deleteButton: { padding: 5, justifyContent: "center", alignItems: "center" },
+  deleteButtonText: { color: "#6e6e73", fontSize: 26, fontWeight: "400", lineHeight: 26 },
+
+  closeModalSection: { paddingVertical: 12, borderTopWidth: 1, borderTopColor: "#3a3a3c", alignItems: "center", justifyContent: "center", borderBottomLeftRadius: 16, borderBottomRightRadius: 16 },
+  cancelTextCentered: { color: "#a0a0a5", fontSize: 16, fontWeight: "600" },
 
   searchInput: {
-  backgroundColor: "white",
+  backgroundColor: "#2c2c2e",
+  color: "white",
   borderRadius: 16,
   padding: 9,
   fontSize: 14,
   marginHorizontal: 10,
   marginBottom: 8,
-  borderWidth: 1,
-  borderColor: "lightgrey",
-  shadowColor: "#000000ad", shadowOpacity: 0.1, shadowRadius: 8, elevation: 5
 },
 });

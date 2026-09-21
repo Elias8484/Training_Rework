@@ -12,6 +12,7 @@ import ProgramsModal from "../../components/modals/ProgramsModal";
 import SaveProgramModal from "../../components/modals/SaveProgramModal";
 import DiscardWorkoutModal from "../../components/modals/DiscardWorkoutModal";
 import Toast, { ToastRef } from "../../components/ui/Toast";
+import { useTabBarPadding } from "../../hooks/useTabBarPadding";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
 const width = Dimensions.get("window").width;
@@ -39,7 +40,7 @@ function TrendBadge({ set }: { set: WorkoutSet }) {
 
   const diff = ((current - last) / last) * 100;
   const trend = diff > 0 ? 1 : diff < 0 ? -1 : 0;
-  if (trend === 0) return <Text style={{ flex: 0.5, textAlign: "center", color: "#aaa", fontSize: 12 }}>—</Text>;
+  if (trend === 0) return <Text style={{ flex: 0.5, textAlign: "center", color: "#6e6e73", fontSize: 12 }}>—</Text>;
 
   const color = trend === 1 ? "#4CAF50" : "#e53935";
   const arrow = trend === 1 ? "↑" : "↓";
@@ -52,6 +53,7 @@ function TrendBadge({ set }: { set: WorkoutSet }) {
 
 export default function WorkoutScreen() {
   const { token, user, markWorkoutSaved} = useAuth();
+  const tabBarPadding = useTabBarPadding();
   const sessionKey = `activeWorkout_${user?.id}`;
 
   const [activeExercises, setActiveExercises] = useState<Exercise[]>([]);
@@ -447,7 +449,7 @@ const saveWorkoutPost = async () => {
                 <TextInput
                   style={[styles.numberInput, emptyFields.includes(`${exercise.id}-${set.id}-weight`) && styles.errorBorder]}
                   placeholder={set.lastKg !== undefined ? String(set.lastKg) : "0"}
-                  placeholderTextColor="grey"
+                  placeholderTextColor="#6e6e73"
                   keyboardType="numeric"
                   value={set.weight}
                   onChangeText={(val) => updateSet(exercise.id, set.id, "weight", val)}
@@ -455,7 +457,7 @@ const saveWorkoutPost = async () => {
                 <TextInput
                   style={[styles.numberInput, emptyFields.includes(`${exercise.id}-${set.id}-reps`) && styles.errorBorder]}
                   placeholder={set.lastReps !== undefined ? String(set.lastReps) : "0"}
-                  placeholderTextColor="grey"
+                  placeholderTextColor="#6e6e73"
                   keyboardType="numeric"
                   value={set.reps}
                   onChangeText={(val) => updateSet(exercise.id, set.id, "reps", val)}
@@ -478,7 +480,7 @@ const saveWorkoutPost = async () => {
             onPress={() => toggleNotes(exercise.id)}
             style={({ pressed }) => [styles.notesIconButton, pressed && { opacity: 0.6 }]}
           >
-            <FontAwesome name="sticky-note-o" size={22} color={openNotes.has(exercise.id) ? "#007AFF" : "#888"} />
+            <FontAwesome name="sticky-note-o" size={22} color={openNotes.has(exercise.id) ? "#0dd8ac" : "#8e8e93"} />
           </Pressable>
         </View>
 
@@ -487,7 +489,7 @@ const saveWorkoutPost = async () => {
             <TextInput
               style={styles.notesInput}
               placeholder={`Type your notes for ${exercise.name} here...`}
-              placeholderTextColor="#999"
+              placeholderTextColor="#6e6e73"
               value={exercise.notes}
               onChangeText={(val) => updateNotes(exercise.id, val)}
               multiline
@@ -544,7 +546,7 @@ const saveWorkoutPost = async () => {
       )}
 
       {activeExercises.length > 0 && (
-        <View style={styles.fixedFooter}>
+        <View style={[styles.fixedFooter, { paddingBottom: tabBarPadding }]}>
           <Pressable style={styles.saveWorkoutButton} onPress={() => {
             if (Platform.OS === "ios") {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -609,47 +611,47 @@ const saveWorkoutPost = async () => {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa", paddingTop: 30 },
-  title: { fontSize: 10, fontWeight: "800", marginBottom: 15, color: "black", paddingHorizontal: 20 },
+  container: { flex: 1, backgroundColor: "#000", paddingTop: 30 },
+  title: { fontSize: 10, fontWeight: "800", marginBottom: 15, color: "white", paddingHorizontal: 20 },
   topButtonsRow: { flexDirection: "row", gap: 10, paddingHorizontal: 20, marginBottom: 20 },
-  programButton: { flex: 2, backgroundColor: "#000", padding: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  primaryButton: { flex: 2, backgroundColor: "#000", padding: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  programButton: { flex: 2, backgroundColor: "#1c1c1e", padding: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  primaryButton: { flex: 2, backgroundColor: "#1c1c1e", padding: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   buttonText: { color: "white", fontWeight: "600", fontSize: 16 },
-  createIconButton: { flex: 1, backgroundColor: "#4CAF50", padding: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  createIconText: { color: "white", fontWeight: "bold", fontSize: 24, lineHeight: 24 },
-  fixedFooter: { paddingHorizontal: 50, paddingBottom: 12, backgroundColor: "#f8f9fa" },
-  saveWorkoutButton: { backgroundColor: "#000", paddingVertical: 12, borderRadius: 16, alignItems: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 5, elevation: 4 },
-  saveWorkoutText: { color: "white", fontSize: 16, fontWeight: "bold" },
+  createIconButton: { flex: 1, backgroundColor: "#0dd8ac", padding: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  createIconText: { color: "#000", fontWeight: "bold", fontSize: 24, lineHeight: 24 },
+  fixedFooter: { paddingHorizontal: 50, paddingBottom: 12, backgroundColor: "#000" },
+  saveWorkoutButton: { backgroundColor: "#0dd8ac", paddingVertical: 12, borderRadius: 16, alignItems: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 5, elevation: 4 },
+  saveWorkoutText: { color: "#000", fontSize: 16, fontWeight: "bold" },
   dualButtonContainer: { flexDirection: "row", marginTop: 10 },
-  saveAsProgramButton: { flex: 0.85, backgroundColor: "#e0e0e0", paddingVertical: 10, borderBottomLeftRadius: 16, borderTopLeftRadius: 16, alignItems: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 5, elevation: 4 },
-  saveAsProgramText: { color: "black", fontSize: 14, fontWeight: "600" },
+  saveAsProgramButton: { flex: 0.85, backgroundColor: "#2c2c2e", paddingVertical: 10, borderBottomLeftRadius: 16, borderTopLeftRadius: 16, alignItems: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 5, elevation: 4 },
+  saveAsProgramText: { color: "white", fontSize: 14, fontWeight: "600" },
   discardWorkoutButton: { flex: 0.15, backgroundColor: "#e33f3d", borderTopRightRadius: 16, borderBottomRightRadius: 16, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 5, elevation: 4 },
   buttoncontainer: { flexDirection: "row", justifyContent: "center",},
   emptyState: { flex: 1, justifyContent: "center", alignItems: "center" },
-  emptyText: { color: "#888", fontSize: 16 },
+  emptyText: { color: "#8e8e93", fontSize: 16 },
   swipeList: { flex: 1 },
   cardContainer: { width: width, paddingHorizontal: 20, paddingBottom: 20, paddingTop: 5 },
-  exerciseCard: { backgroundColor: "white", padding: 20, borderRadius: 16, flex: 1, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 8, elevation: 5 },
+  exerciseCard: { backgroundColor: "#1c1c1e", padding: 20, borderRadius: 16, flex: 1, shadowColor: "#000", shadowOpacity: 0.3, shadowRadius: 8, elevation: 5 },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", paddingBottom: 10 },
   cardHeaderText: { flex: 1 },
-  exerciseName: { fontSize: 20, fontWeight: "bold", color: "black" },
-  muscleGroup: { fontSize: 12, color: "#888", marginTop: 4, textTransform: "uppercase", letterSpacing: 1 },
+  exerciseName: { fontSize: 20, fontWeight: "bold", color: "white" },
+  muscleGroup: { fontSize: 12, color: "#8e8e93", marginTop: 4, textTransform: "uppercase", letterSpacing: 1 },
   menuButton: { padding: 4 },
-  menuDots: { fontSize: 24, color: "#888", fontWeight: "bold", lineHeight: 24 },
-  setHeader: { flexDirection: "row", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#f0f0f0", marginBottom: 10 },
-  headerText: { flex: 1, fontWeight: "700", color: "#888", textAlign: "left", fontSize: 12, textTransform: "uppercase" },
+  menuDots: { fontSize: 24, color: "#8e8e93", fontWeight: "bold", lineHeight: 24 },
+  setHeader: { flexDirection: "row", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#3a3a3c", marginBottom: 10 },
+  headerText: { flex: 1, fontWeight: "700", color: "#8e8e93", textAlign: "left", fontSize: 12, textTransform: "uppercase" },
   setRow: { flexDirection: "row", alignItems: "center", marginBottom: 8, paddingVertical: 4 },
-  setIndex: { flex: 0.3, textAlign: "left", fontSize: 16, fontWeight: "600", color: "#333" },
-  numberInput: { flex: 0.7, backgroundColor: "#ebebeb", borderRadius: 8, padding: 12, marginHorizontal: 5, textAlign: "center", fontSize: 16, fontWeight: "500", shadowColor: "#000000ad", shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
+  setIndex: { flex: 0.3, textAlign: "left", fontSize: 16, fontWeight: "600", color: "#a0a0a5" },
+  numberInput: { flex: 0.7, backgroundColor: "#2c2c2e", color: "white", borderRadius: 8, padding: 12, marginHorizontal: 5, textAlign: "center", fontSize: 16, fontWeight: "500" },
   removeSetButton: { flex: 0.4, alignItems: "center", justifyContent: "flex-end" },
-  removeSetText: { color: "grey", fontSize: 20, fontWeight: "300" },
-  addSetButton: { width: "50%", marginTop: 1, paddingVertical: 10, backgroundColor: "#f0f8ff", borderRadius: 8, marginHorizontal: 50, alignSelf: "flex-start" },
-  addSetText: { color: "#007AFF", fontWeight: "600", textAlign: "center", fontSize: 16 },
+  removeSetText: { color: "#8e8e93", fontSize: 20, fontWeight: "300" },
+  addSetButton: { width: "50%", marginTop: 1, paddingVertical: 10, backgroundColor: "#2c2c2e", borderRadius: 8, marginHorizontal: 50, alignSelf: "flex-start" },
+  addSetText: { color: "#0dd8ac", fontWeight: "600", textAlign: "center", fontSize: 16 },
   errorBorder: {borderWidth: 1, borderColor: "#ff19006f", },
-  notesInput: { fontSize: 14, color: "#111", flex: 1 },
-  notesPanel: { position: "absolute", bottom: 4, left: 50, right: 4, height: 80, backgroundColor: "white", borderRadius: 10, padding: 8, borderWidth: 1, borderColor: "#d0d0d0" },
-  cardBottomBar: { paddingTop: 4, paddingLeft: 0, paddingRight: 4, borderTopWidth: 1, borderTopColor: "#f0f0f0" },
-  notesIconButton: { padding: 6, borderRadius: 8, marginLeft: -12, borderWidth: 1, borderColor: "#e0e0e0", backgroundColor: "#f7f7f7" },
+  notesInput: { fontSize: 14, color: "white", flex: 1 },
+  notesPanel: { position: "absolute", bottom: 4, left: 50, right: 4, height: 80, backgroundColor: "#2c2c2e", borderRadius: 10, padding: 8, borderWidth: 1, borderColor: "#3a3a3c" },
+  cardBottomBar: { paddingTop: 4, paddingLeft: 0, paddingRight: 4, borderTopWidth: 1, borderTopColor: "#3a3a3c" },
+  notesIconButton: { padding: 6, borderRadius: 8, marginLeft: -12, borderWidth: 1, borderColor: "#3a3a3c", backgroundColor: "#2c2c2e" },
 
 
 

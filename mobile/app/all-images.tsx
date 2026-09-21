@@ -94,11 +94,11 @@ export default function AllImagesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000' },
   grid: { gap: 1 },
   tile: { width: TILE_SIZE, height: TILE_SIZE },
-  errorText: { color: 'red', fontSize: 16 },
-  emptyText: { fontSize: 16, color: '#666' },
+  errorText: { color: '#e33f3d', fontSize: 16 },
+  emptyText: { fontSize: 16, color: '#8e8e93' },
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.92)',

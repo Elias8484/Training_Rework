@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   toastContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: '#1c1c1e',
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderRadius: 12,
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     borderRightColor: '#e53935',  
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.4,
     shadowRadius: 10,
     elevation: 6,
   },
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     fontSize: 15,
     fontWeight: '600',
-    color: '#333',
+    color: 'white',
     flex: 1,
   },
 });

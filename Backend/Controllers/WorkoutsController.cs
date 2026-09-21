@@ -4,22 +4,31 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 
+// Read-only endpoints for a user's completed workouts. Writing happens in ExerciseController.saveWorkout.
+
 [Authorize]
 [ApiController]
-[Route("api/history")]
-public class WorkoutHistoryController : ControllerBase {
+[Route("api/workouts")]
+public class WorkoutsController : ControllerBase {
 
     private readonly AppDbContext _context;
 
-    public WorkoutHistoryController(AppDbContext context){
+    public WorkoutsController(AppDbContext context){
         _context = context;
     }
 
+    // GET api/workouts/getHistory?pastWorkoutQuantity=6&offset=0
+    // Paginated summary list for the home screen and history page. Returns one row per workout with
+    // muscle groups and their set counts, but not the individual sets. The client pages by passing
+    // a growing offset; a response shorter than pastWorkoutQuantity tells it there's nothing more.
     [HttpGet("getHistory")]
     public async Task<IActionResult> GetHistory([FromQuery] int pastWorkoutQuantity, [FromQuery] int offset = 0)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
+        // OrderByDescending must come before Skip/Take, otherwise "page 2" isn't stable between requests.
+        // The two Include chains load entries -> exercise and entries -> sets in one query, so the
+        // grouping below runs in memory without going back to the database.
         var workouts = await _context.Workouts
             .Where(w => w.UserId == userId)
             .OrderByDescending(w => w.CreatedAt)
@@ -31,6 +40,8 @@ public class WorkoutHistoryController : ControllerBase {
                 .ThenInclude(e => e.Sets)
             .ToListAsync();
 
+        // Collapse each workout's entries by muscle group and sum the sets, e.g. two chest
+        // exercises with 3 sets each become { MuscleGroup: "Chest", Sets: 6 }.
         var result = workouts.Select(w => new {
             w.Id,
             w.CreatedAt,
@@ -44,8 +55,11 @@ public class WorkoutHistoryController : ControllerBase {
         return Ok(result);
     }
 
-    [HttpGet("getDetails/{id}")]
-    public async Task<IActionResult> GetDetails(int id)
+    // GET api/workouts/getWorkout/42
+    // Full breakdown of a single workout for the history/[id] screen: every exercise with its
+    // name, muscle group and each set's kg and reps. 404 if the id doesn't exist or isn't the caller's.
+    [HttpGet("getWorkout/{id}")]
+    public async Task<IActionResult> GetWorkout(int id)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
@@ -56,9 +70,8 @@ public class WorkoutHistoryController : ControllerBase {
             .FirstOrDefaultAsync();
 
         if (workout == null) return NotFound();
-        
-        
-        var result = ( new {
+
+        var result = new {
             workout.Id,
             workout.CreatedAt,
             workout.TotalKg,
@@ -67,10 +80,8 @@ public class WorkoutHistoryController : ControllerBase {
                 e.Exercise.MuscleGroup,
                 Sets = e.Sets.Select(s => new { s.Kg, s.Reps }).ToList()
             }).ToList()
-        });
+        };
 
         return Ok(result);
     }
-
-
 }

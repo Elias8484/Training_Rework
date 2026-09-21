@@ -1,3 +1,5 @@
+// Fetches the paginated list of past workouts (summary shape: muscle groups + set counts, not full sets).
+// fetchWorkouts(n) loads the first n; loadMore(n) appends the next n. Screens decide when to call them.
 import { useState } from "react";
 import { useAuth } from "../context/auth";
 
@@ -23,7 +25,7 @@ export function useWorkoutHistory() {
     setIsLoading(true);
     try {
       const res = await fetch(
-        `${API_BASE}/api/history/getHistory?pastWorkoutQuantity=${pastWorkoutQuantity}&offset=${newOffset}`,
+        `${API_BASE}/api/workouts/getHistory?pastWorkoutQuantity=${pastWorkoutQuantity}&offset=${newOffset}`,
         { headers: { "Authorization": `Bearer ${token}` } }
       );
       if (!res.ok) {

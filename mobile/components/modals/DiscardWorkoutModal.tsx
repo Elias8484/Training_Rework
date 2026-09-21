@@ -15,7 +15,7 @@ export default function DiscardWorkoutModal({ visible, onClose, onDiscard }: Pro
       <Text style={styles.modalTitle}>Discard Workout?</Text>
       
       <Pressable 
-        style={({ pressed }) => [styles.actionButton, pressed && { backgroundColor: '#f0f0f0' }]} 
+        style={({ pressed }) => [styles.actionButton, pressed && { backgroundColor: '#2c2c2e' }]} 
         onPress={() => {
           if (Platform.OS === "ios") {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -29,7 +29,7 @@ export default function DiscardWorkoutModal({ visible, onClose, onDiscard }: Pro
       </Pressable>
       
       <Pressable 
-        style={({ pressed }) => [styles.closeModalSection, pressed && { backgroundColor: '#f0f0f0' }]} 
+        style={({ pressed }) => [styles.closeModalSection, pressed && { backgroundColor: '#2c2c2e' }]} 
         onPress={onClose}
       >
         <Text style={styles.cancelTextCentered}>Cancel</Text>
@@ -39,9 +39,9 @@ export default function DiscardWorkoutModal({ visible, onClose, onDiscard }: Pro
 }
 
 const styles = StyleSheet.create({
-  modalTitle: { fontSize: 14, fontWeight: "bold", marginBottom: 20, color: "black", textAlign: "left" },
-  actionButton: { paddingVertical: 18, borderTopWidth: 1, borderTopColor: "#eee", alignItems: "center", justifyContent: "center", marginHorizontal: -25 },
+  modalTitle: { fontSize: 14, fontWeight: "bold", marginBottom: 20, color: "white", textAlign: "left" },
+  actionButton: { paddingVertical: 18, borderTopWidth: 1, borderTopColor: "#3a3a3c", alignItems: "center", justifyContent: "center", marginHorizontal: -25 },
   menuActionDestructive: { fontSize: 16, color: "#e53935", fontWeight: "600" },
-  closeModalSection: { paddingVertical: 18, borderTopWidth: 1, borderTopColor: "#eee", alignItems: "center", justifyContent: "center", marginHorizontal: -25, marginBottom: -40 },
-  cancelTextCentered: { color: "#000000ad", fontSize: 16, fontWeight: "600" },
+  closeModalSection: { paddingVertical: 18, borderTopWidth: 1, borderTopColor: "#3a3a3c", alignItems: "center", justifyContent: "center", marginHorizontal: -25, marginBottom: -40 },
+  cancelTextCentered: { color: "#a0a0a5", fontSize: 16, fontWeight: "600" },
 });

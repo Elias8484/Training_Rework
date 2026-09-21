@@ -19,7 +19,7 @@ function RootNavigator() {
     if (!user && !onAuthScreen) {
       router.replace('/sign-in');
     } else if (user && onAuthScreen) {
-      router.replace('/(tabs)');
+      router.replace('/');
     }
   }, [user, isLoading, segments]);
 
@@ -27,13 +27,13 @@ function RootNavigator() {
 
   return (
     <>
-      <Stack>
+      <Stack screenOptions={{ headerStyle: { backgroundColor: '#000' }, headerTintColor: 'white', headerShadowVisible: false, contentStyle: { backgroundColor: '#000' } }}>
         <Stack.Screen name="sign-in" options={{ headerShown: false }} />
         <Stack.Screen name="sign-up" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style="light" />
     </>
   );
 }

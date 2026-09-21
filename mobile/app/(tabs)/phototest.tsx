@@ -3,12 +3,14 @@ import { View, Text, Pressable, Image, ActivityIndicator, Alert, StyleSheet } fr
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../context/auth';
+import { useTabBarPadding } from '../../hooks/useTabBarPadding';
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
 
 export default function PhotoTestScreen() {
   const [image, setImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const { token } = useAuth();
+  const tabBarPadding = useTabBarPadding();
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -70,12 +72,12 @@ export default function PhotoTestScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: tabBarPadding }]}>
       <Text style={styles.title}>Upload Photo</Text>
       {image && <Image source={{ uri: image }} style={styles.image} />}
       
       <Pressable style={styles.button} onPress={pickImage} disabled={uploading}>
-        {uploading ? <ActivityIndicator color="white" /> : <Text style={styles.buttonText}>Pick & Upload</Text>}
+        {uploading ? <ActivityIndicator color="#000" /> : <Text style={[styles.buttonText, { color: '#000' }]}>Pick & Upload</Text>}
       </Pressable>
 
       <Pressable style={[styles.button, styles.secondaryButton]} onPress={() => router.push('/all-images')}>
@@ -86,10 +88,10 @@ export default function PhotoTestScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000' },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, color: 'white' },
   image: { width: 300, height: 300, borderRadius: 10, marginBottom: 20 },
-  button: { backgroundColor: '#007AFF', padding: 15, borderRadius: 8, width: '80%', alignItems: 'center', marginTop: 12 },
-  secondaryButton: { backgroundColor: '#555' },
+  button: { backgroundColor: '#0dd8ac', padding: 15, borderRadius: 8, width: '80%', alignItems: 'center', marginTop: 12 },
+  secondaryButton: { backgroundColor: '#2c2c2e' },
   buttonText: { color: 'white', fontWeight: 'bold', fontSize: 16 }
 });

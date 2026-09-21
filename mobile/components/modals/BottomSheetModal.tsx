@@ -75,10 +75,10 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
   },
   bottomSheet: {
-    backgroundColor: "white",
+    backgroundColor: "#1c1c1e",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 25,

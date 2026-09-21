@@ -28,7 +28,7 @@ export default function ProgramsModal({ visible, onClose, programs, onSelect, on
 
           <ScrollView showsVerticalScrollIndicator={false}>
             {programs.length === 0 ? (
-              <Text style={{ textAlign: "center", color: "#888", marginTop: 30, paddingHorizontal: 20 }}>
+              <Text style={{ textAlign: "center", color: "#8e8e93", marginTop: 30, paddingHorizontal: 20 }}>
                 No programs saved yet.
               </Text>
             ) : (
@@ -37,7 +37,7 @@ export default function ProgramsModal({ visible, onClose, programs, onSelect, on
                   key={prog.id} 
                   style={({ pressed }) => [
                     styles.existingRow,
-                    pressed && { backgroundColor: '#f8f8f8' }
+                    pressed && { backgroundColor: '#2c2c2e' }
                   ]}
                   onPress={() => { 
                     if (Platform.OS === "ios") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -58,7 +58,7 @@ export default function ProgramsModal({ visible, onClose, programs, onSelect, on
           </ScrollView>
 
           <Pressable 
-            style={({ pressed }) => [styles.closeModalSection, pressed && { backgroundColor: '#f0f0f0' }]} 
+            style={({ pressed }) => [styles.closeModalSection, pressed && { backgroundColor: '#2c2c2e' }]}
             onPress={onClose}
           >
             <Text style={styles.cancelTextCentered}>Cancel</Text>
@@ -70,10 +70,10 @@ export default function ProgramsModal({ visible, onClose, programs, onSelect, on
 }
 
 const styles = StyleSheet.create({
-  centeredOverlay: { flex: 1, backgroundColor: "rgba(0, 0, 0, 0.6)", justifyContent: "center", paddingHorizontal: 20 },
-  
-  modalContent: { 
-    backgroundColor: "white", 
+  centeredOverlay: { flex: 1, backgroundColor: "rgba(0, 0, 0, 0.7)", justifyContent: "center", paddingHorizontal: 20 },
+
+  modalContent: {
+    backgroundColor: "#1c1c1e",
     paddingTop: 20, 
     borderRadius: 16,
     minHeight: SCREEN_HEIGHT * 0.35, 
@@ -84,10 +84,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 15,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    borderBottomColor: "#3a3a3c",
     marginBottom: 5
   },
-  modalTitle: { fontSize: 20, fontWeight: "bold", color: "black", textAlign: "center" },
+  modalTitle: { fontSize: 20, fontWeight: "bold", color: "white", textAlign: "center" },
   
   existingRow: { 
     flexDirection: "row", 
@@ -95,15 +95,15 @@ const styles = StyleSheet.create({
     alignItems: "center", 
     paddingVertical: 15, 
     paddingHorizontal: 20,
-    borderBottomWidth: 1, 
-    borderBottomColor: "#f0f0f0" 
+    borderBottomWidth: 1,
+    borderBottomColor: "#3a3a3c"
   },
-  existingName: { fontSize: 16, fontWeight: "600" },
-  existingDetails: { color: "#888", fontSize: 13, marginTop: 2 },
-  
-  deleteButton: { padding: 5, justifyContent: "center", alignItems: "center" },
-  deleteButtonText: { color: "lightgrey", fontSize: 26, fontWeight: "400", lineHeight: 26 },
+  existingName: { fontSize: 16, fontWeight: "600", color: "white" },
+  existingDetails: { color: "#8e8e93", fontSize: 13, marginTop: 2 },
 
-  closeModalSection: { paddingVertical: 12, borderTopWidth: 1, borderTopColor: "#eee", alignItems: "center", justifyContent: "center", borderBottomLeftRadius: 16, borderBottomRightRadius: 16 },
-  cancelTextCentered: { color: "#000000ad", fontSize: 16, fontWeight: "600" },
+  deleteButton: { padding: 5, justifyContent: "center", alignItems: "center" },
+  deleteButtonText: { color: "#6e6e73", fontSize: 26, fontWeight: "400", lineHeight: 26 },
+
+  closeModalSection: { paddingVertical: 12, borderTopWidth: 1, borderTopColor: "#3a3a3c", alignItems: "center", justifyContent: "center", borderBottomLeftRadius: 16, borderBottomRightRadius: 16 },
+  cancelTextCentered: { color: "#a0a0a5", fontSize: 16, fontWeight: "600" },
 });

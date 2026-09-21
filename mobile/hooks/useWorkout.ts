@@ -1,3 +1,5 @@
+// Fetches one past workout by id with every exercise and set. Refetches automatically when id changes.
+// Unlike useWorkoutHistory it owns the fetch timing itself, so screens just read { workout, isLoading }.
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/auth";
 
@@ -12,7 +14,7 @@ export type WorkoutDetail = {
   exercises: WorkoutDetailExercise[];
 };
 
-export function useWorkoutDetail(id: string) {
+export function useWorkout(id: string) {
   const { token } = useAuth();
   const [workout, setWorkout] = useState<WorkoutDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,14 +26,14 @@ export function useWorkoutDetail(id: string) {
 
     const fetchDetail = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/history/getDetails/${id}`, {
+        const res = await fetch(`${API_BASE}/api/workouts/getWorkout/${id}`, {
           headers: { "Authorization": `Bearer ${token}` },
         });
         if (!res.ok) {
           const reason = res.status === 401
             ? res.headers.get("www-authenticate")
             : await res.text();
-          console.error("getDetails failed", res.status, reason);
+          console.error("getWorkout failed", res.status, reason);
           return;
         }
         const data: WorkoutDetail = await res.json();
