@@ -3,7 +3,7 @@ Social strength training progression application for iOS and Android.
 ## Stack
 
 **Frontend**
-- React Native (Expo)
+- React Native 
 - TypeScript
 
 **Backend**
@@ -30,7 +30,7 @@ dotnet user-secrets set "Jwt:Issuer" "<your-issuer>"
 dotnet user-secrets set "Jwt:Audience" "<your-audience>"
 ```
 
-Mobile — create a `.env` file in the `mobile/` folder:
+Mobile — create `.env` file in the `mobile/` folder:
 
 ```dotenv
 EXPO_PUBLIC_API_BASE=https://your-api-domain.example.com
