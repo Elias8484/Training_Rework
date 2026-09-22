@@ -44,3 +44,9 @@ cd mobile
 npm install
 npx expo start
 ```
+
+And run:
+```bash
+cd backend
+dotnet run
+```
