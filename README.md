@@ -1,6 +1,4 @@
-Social fitness progression tracking application for iOS and Android.
-
-This started as a fullstack JavaScript web app to log our workouts. Now we are rebuilding it as a real mobile app in React Native, with an ASP.NET Core backend and PostgreSQL database running locally on a Raspberry Pi.
+Social strength training progression application for iOS and Android.
 
 ## Stack
 
