@@ -28,7 +28,6 @@ dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<your-postgres-co
 dotnet user-secrets set "Jwt:Key" "<your-jwt-key>"
 dotnet user-secrets set "Jwt:Issuer" "<your-issuer>"
 dotnet user-secrets set "Jwt:Audience" "<your-audience>"
-dotnet run
 ```
 
 Mobile — create a `.env` file in the `mobile/` folder:
